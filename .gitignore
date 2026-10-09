@@ -1,8 +1,13 @@
 .idea/
+.venv/
 venv/
 __pycache__/
+*.pyc
 dist/
 build/
 *.egg-info/
 .env
 .DS_Store
+.coverage
+htmlcov/
+.pytest_cache/
