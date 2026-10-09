@@ -27,10 +27,13 @@ dev = [
   "pytest-httpx>=0.30.0",
   "pytest-cov>=5.0.0",
   "respx>=0.22.0",
+  "mkdocs-material>=9.5.0",
+  "mkdocstrings[python]>=0.24.0",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/jukto-sdk/jukto-python"
+"Documentation" = "https://jukto-sdk.github.io/jukto-python/"
 "Bug Tracker" = "https://github.com/jukto-sdk/jukto-python/issues"
 
 [tool.pytest.ini_options]
