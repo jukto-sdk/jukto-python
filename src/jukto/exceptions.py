@@ -126,3 +126,15 @@ class InsufficientBalanceError(ProviderError):
     """Raised when account balance or credits are depleted."""
 
     pass
+
+
+class UnexpectedProviderResponseError(ProviderError):
+    """Upstream decoding/schema failure; a side effect may already have happened."""
+
+
+class SMSBatchError(ProviderError):
+    """Batch contains failed or unknown entries; inspect results before retrying."""
+
+    def __init__(self, message: str, *, results: Any, **kwargs: Any) -> None:
+        super().__init__(message, **kwargs)
+        self.results = results

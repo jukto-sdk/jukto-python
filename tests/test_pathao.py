@@ -14,6 +14,7 @@ from jukto import (
     ProviderRateLimitError,
     ProviderError,
     JuktoValidationError,
+    UnexpectedProviderResponseError,
 )
 
 
@@ -81,7 +82,7 @@ def test_pathao_token_refresh(pathao_client: PathaoClient, sample_parcel: Parcel
     )
 
     respx.post(f"{pathao_client.base_url}/aladdin/api/v1/orders").mock(
-        return_value=httpx.Response(200, json={"type": "success", "data": {}})
+        return_value=httpx.Response(200, json={"type": "success", "data": {"consignment_id": "REFRESH-OK"}})
     )
 
     pathao_client.create_order(sample_parcel)
@@ -103,11 +104,11 @@ def test_pathao_auth_failure_on_token(pathao_client: PathaoClient):
 
 
 @respx.mock
-def test_pathao_missing_access_token_in_200(pathao_client: PathaoClient):
+def test_pathao_missing_access_token_is_unexpected(pathao_client: PathaoClient):
     respx.post(f"{pathao_client.base_url}/aladdin/api/v1/issue-token").mock(
         return_value=httpx.Response(200, json={"token_type": "Bearer"})
     )
-    with pytest.raises(ProviderAuthenticationError):
+    with pytest.raises(UnexpectedProviderResponseError):
         pathao_client.get_token()
 
 
@@ -159,8 +160,8 @@ def test_pathao_token_refresh_fallback_missing_token(pathao_client: PathaoClient
         ]
     )
 
-    token = pathao_client.get_token()
-    assert token == "reissued_token_2"
+    with pytest.raises(UnexpectedProviderResponseError):
+        pathao_client.get_token()
 
 
 def test_pathao_missing_store_id(pathao_client: PathaoClient):

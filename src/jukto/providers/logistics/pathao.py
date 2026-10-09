@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import time
+import math
 from typing import Any, Optional
 import httpx
+from jukto._responses import decode_json, error_body, require_object, unexpected
 from jukto._transport import secure_http_client, validate_endpoint
 
 from jukto.exceptions import (
@@ -17,6 +19,7 @@ from jukto.exceptions import (
     ProviderServerError,
     ProviderTimeoutError,
     ResourceNotFoundError,
+    UnexpectedProviderResponseError,
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.logger import logger
@@ -66,18 +69,7 @@ class PathaoClient(BaseLogisticsProvider):
 
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
         status_code = exc.response.status_code
-        try:
-            body = exc.response.json()
-            message = (
-                body.get("message")
-                or body.get("error_description")
-                or body.get("error")
-                or (str(body.get("errors")) if body.get("errors") else None)
-                or str(body)
-            )
-        except Exception:
-            body = exc.response.text
-            message = body.strip() or exc.response.reason_phrase
+        body = error_body(exc.response)
 
         error_message = f'Pathao API error ({status_code}): [details withheld]'
         logger.error('provider=Pathao operation=handle_http_status_error event=error status=%d', status_code)
@@ -145,18 +137,20 @@ class PathaoClient(BaseLogisticsProvider):
                     headers={"Accept": "application/json", "Content-Type": "application/json"},
                 )
                 response.raise_for_status()
-                data = response.json()
+                data = require_object(decode_json(response, "Pathao"), response, "Pathao")
+                if not isinstance(data.get("access_token"), str) or not data["access_token"]:
+                    raise unexpected(response, "Pathao", data)
                 self.access_token = data.get("access_token")
                 self.refresh_token = data.get("refresh_token")
                 expires_in = data.get("expires_in", 3600)
-                self.token_expiry = time.time() + float(expires_in)
+                try:
+                    ttl = float(expires_in)
+                except (ValueError, TypeError, OverflowError):
+                    raise unexpected(response, "Pathao", data) from None
+                if isinstance(expires_in, bool) or not math.isfinite(ttl) or ttl <= 0:
+                    raise unexpected(response, "Pathao", data)
+                self.token_expiry = time.time() + ttl
                 logger.debug('provider=Pathao operation=issue_token event=auth')
-                if not self.access_token:
-                    raise ProviderAuthenticationError(
-                        "Pathao returned success but no access_token found in payload",
-                        response_body=data,
-                        provider="Pathao",
-                    )
                 return self.access_token
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(
@@ -194,16 +188,24 @@ class PathaoClient(BaseLogisticsProvider):
                     headers={"Accept": "application/json", "Content-Type": "application/json"},
                 )
                 response.raise_for_status()
-                data = response.json()
+                data = require_object(decode_json(response, "Pathao"), response, "Pathao")
+                if not isinstance(data.get("access_token"), str) or not data["access_token"]:
+                    raise unexpected(response, "Pathao", data)
                 self.access_token = data.get("access_token")
                 self.refresh_token = data.get("refresh_token", self.refresh_token)
                 expires_in = data.get("expires_in", 3600)
-                self.token_expiry = time.time() + float(expires_in)
+                try:
+                    ttl = float(expires_in)
+                except (ValueError, TypeError, OverflowError):
+                    raise unexpected(response, "Pathao", data) from None
+                if isinstance(expires_in, bool) or not math.isfinite(ttl) or ttl <= 0:
+                    raise unexpected(response, "Pathao", data)
+                self.token_expiry = time.time() + ttl
                 logger.debug('provider=Pathao operation=refresh_access_token event=auth')
-                if not self.access_token:
-                    return self._issue_token()
                 return self.access_token
-        except Exception as exc:
+        except UnexpectedProviderResponseError:
+            raise
+        except (httpx.RequestError, httpx.HTTPStatusError, ProviderError):
             logger.warning('provider=Pathao operation=refresh_access_token event=error')
             return self._issue_token()
 
@@ -217,6 +219,25 @@ class PathaoClient(BaseLogisticsProvider):
             return self._refresh_access_token()
 
         return self._issue_token()
+
+    def _inspect_response(self, response: httpx.Response, endpoint: str) -> dict[str, Any]:
+        """Conservative legacy envelope guard; official application codes unresolved."""
+        data = require_object(decode_json(response, "Pathao"), response, "Pathao")
+        # Do not guess the semantics of error/type/status codes from HTTP conventions.
+        if data.get("type") not in (None, "success") or data.get("error") or data.get("errors"):
+            raise unexpected(response, "Pathao", data)
+        content = data.get("data")
+        if not ((isinstance(content, dict) and bool(content)) or isinstance(content, list)):
+            raise unexpected(response, "Pathao", data)
+        if endpoint.endswith("/orders"):
+            valid = isinstance(content, dict) and bool(content.get("consignment_id"))
+        elif endpoint.endswith("/info"):
+            valid = isinstance(content, dict) and isinstance(content.get("order_status"), str) and bool(content["order_status"])
+        else:
+            valid = isinstance(content, (dict, list))
+        if not valid:
+            raise unexpected(response, "Pathao", data)
+        return data
 
     def _request(self, method: str, endpoint: str, **kwargs: Any) -> dict[str, Any]:
         """Execute an authenticated HTTP request to Pathao API."""
@@ -244,7 +265,7 @@ class PathaoClient(BaseLogisticsProvider):
                 )
                 logger.debug('provider=Pathao operation=request event=response status=%d', response.status_code)
                 response.raise_for_status()
-                return response.json()
+                return self._inspect_response(response, endpoint)
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(
                 'Pathao request timed out: [details withheld]',
@@ -266,8 +287,8 @@ class PathaoClient(BaseLogisticsProvider):
                             **kwargs,
                         )
                         retry_resp.raise_for_status()
-                        return retry_resp.json()
-                except Exception:
+                        return self._inspect_response(retry_resp, endpoint)
+                except (httpx.RequestError, httpx.HTTPStatusError):
                     pass
             self._handle_http_status_error(exc)
             raise

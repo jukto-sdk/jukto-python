@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 import httpx
+from jukto._responses import decode_json, unexpected
 from jukto._transport import secure_http_client
 
 from jukto.exceptions import (
@@ -92,17 +93,16 @@ class AlphaSMSClient(BaseSMSProvider):
         # Accept canonical decimal strings only, not bools, floats or coercible objects.
         if type(raw_code) is int:
             error_code = raw_code
-        elif isinstance(raw_code, str) and raw_code.isascii() and raw_code.isdecimal() and str(int(raw_code)) == raw_code:
+        elif isinstance(raw_code, str) and len(raw_code) <= 10 and raw_code.isascii() and raw_code.isdecimal() and str(int(raw_code)) == raw_code:
             error_code = int(raw_code)
         else:
-            raise ProviderError(
-                "AlphaSMS returned an unrecognized error-code structure",
-                status_code=response.status_code,
-                response_body=data,
-                provider="AlphaSMS",
-            )
+            raise unexpected(response, "AlphaSMS", data)
 
         if error_code == 0:
+            submission = data.get("data")
+            request_id = submission.get("request_id") if isinstance(submission, dict) else None
+            if not ((type(request_id) is int and request_id >= 0) or (isinstance(request_id, str) and request_id)):
+                raise unexpected(response, "AlphaSMS", data)
             return data
 
         # Jukto categories derived from https://sms.bd/api (checked 2026-10-10).
@@ -155,7 +155,7 @@ class AlphaSMSClient(BaseSMSProvider):
                 response = client.post(self.base_url, data=payload)
                 logger.debug('provider=AlphaSMS operation=send_sms event=response status=%d', response.status_code)
                 response.raise_for_status()
-                data = response.json()
+                data = decode_json(response, "AlphaSMS")
                 return self._inspect_response_data(data, response)
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(

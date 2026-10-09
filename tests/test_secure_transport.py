@@ -96,7 +96,11 @@ def test_http_opt_in_allows_explicit_legacy_request(factory, sample_parcel):
         client.access_token = 'offline-token'
         client.token_expiry = time.time() + 3600
     # Deliberate transport-only simulation, not evidence of provider behavior.
-    route = respx.route(host='local.test').respond(200, json={'error': 0, 'response_code': 202})
+    payload = {'error': 0, 'data': {'request_id': 123, 'consignment_id': '123'},
+               'response_code': 202, 'status': 200, 'consignment': {'consignment_id': 123}, 'tracking_id': '123'}
+    if isinstance(client, GreenWebClient):
+        payload = [{'status': 'SENT'}]
+    route = respx.route(host='local.test').respond(200, json=payload)
     if isinstance(client, (AlphaSMSClient, BulkSMSBDClient, GreenWebClient)):
         client.send_sms('01700000000', 'message')
     else:

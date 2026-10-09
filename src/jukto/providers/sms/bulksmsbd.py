@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 import httpx
+from jukto._responses import decode_json, unexpected
 from jukto._transport import secure_http_client
 
 from jukto.exceptions import (
@@ -90,12 +91,7 @@ class BulkSMSBDClient(BaseSMSProvider):
         """
         response_code = data.get("response_code") if isinstance(data, dict) else None
         if type(response_code) is not int:
-            raise ProviderError(
-                "BulkSMSBD returned an unrecognized response-code structure",
-                status_code=response.status_code,
-                response_body=data,
-                provider="BulkSMSBD",
-            )
+            raise unexpected(response, "BulkSMSBD", data)
 
         # Legacy compatibility only: 202 has not been independently verified.
         # Do not infer string/float variants or error meanings from existing mocks.
@@ -132,7 +128,7 @@ class BulkSMSBDClient(BaseSMSProvider):
                 response = client.post(self.base_url, data=payload)
                 logger.debug('provider=BulkSMSBD operation=send_sms event=response status=%d', response.status_code)
                 response.raise_for_status()
-                data = response.json()
+                data = decode_json(response, "BulkSMSBD")
                 return self._inspect_response_data(data, response)
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(

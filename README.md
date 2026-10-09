@@ -179,3 +179,9 @@ an explicit `allow_insecure_http=True` constructor option. BulkSMSBD's legacy HT
 default now requires that opt-in while HTTPS SMS POST support remains unverified.
 See the [transport policy and evidence](docs/provider-contracts.md#task-2-credential-transport-policy)
 for migration details.
+
+Malformed or unrecognized responses raise `UnexpectedProviderResponseError`.
+GreenWeb batch failures raise `SMSBatchError` with all entries preserved in
+`results`, including sent, failed, and unknown indices. Reconcile unknown outcomes
+before retrying; do not resend a whole partially successful batch. See the
+[response and batch policy](docs/provider-contracts.md#task-4-malformed-responses-and-sms-batch-outcomes).

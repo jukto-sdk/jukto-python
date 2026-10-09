@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 import httpx
+from jukto._responses import decode_json, error_body, require_object, unexpected
 from jukto._transport import secure_http_client, validate_endpoint
 
 from jukto.exceptions import (
@@ -51,17 +52,7 @@ class RedXClient(BaseLogisticsProvider):
 
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
         status_code = exc.response.status_code
-        try:
-            body = exc.response.json()
-            message = (
-                body.get("message")
-                or body.get("error")
-                or (str(body.get("errors")) if body.get("errors") else None)
-                or str(body)
-            )
-        except Exception:
-            body = exc.response.text
-            message = body.strip() or exc.response.reason_phrase
+        body = error_body(exc.response)
 
         error_message = f'RedX API error ({status_code}): [details withheld]'
         logger.error('provider=RedX operation=handle_http_status_error event=error status=%d', status_code)
@@ -166,8 +157,15 @@ class RedXClient(BaseLogisticsProvider):
                 )
                 logger.debug('provider=RedX operation=request event=response status=%d', response.status_code)
                 response.raise_for_status()
-                data = response.json()
+                data = require_object(decode_json(response, "RedX"), response, "RedX")
                 self._handle_inline_errors(data)
+                content = data.get("tracking_id") if method == "POST" else data.get("tracking")
+                if method == "POST":
+                    valid = isinstance(content, (str, int)) and not isinstance(content, bool) and bool(content)
+                else:
+                    valid = isinstance(content, dict) and isinstance(content.get("status"), str) and bool(content["status"])
+                if not valid:
+                    raise unexpected(response, "RedX", data)
                 return data
         except httpx.TimeoutException as exc:
             logger.error('provider=RedX operation=request event=timeout')

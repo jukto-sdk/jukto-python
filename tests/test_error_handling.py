@@ -1,3 +1,4 @@
+from json import JSONDecodeError
 import unittest
 from unittest.mock import patch, MagicMock
 import httpx
@@ -80,7 +81,7 @@ class TestSteadfastErrorHandling(unittest.TestCase):
     def test_server_error_500(self, mock_request):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 500
-        mock_response.json.side_effect = Exception("Not JSON")
+        mock_response.json.side_effect = JSONDecodeError("Not JSON", "", 0)
         mock_response.text = "Internal Server Error"
         mock_response.reason_phrase = "Internal Server Error"
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
@@ -123,6 +124,8 @@ class TestGreenWebErrorHandling(unittest.TestCase):
         mock_response.status_code = 200
         mock_response.raise_for_status.return_value = None
         mock_response.text = "Invalid Token"
+        mock_response.json.side_effect = JSONDecodeError("Not JSON", "", 0)
+        mock_response.headers = {}
         mock_post.return_value = mock_response
 
         with self.assertRaises(ProviderAuthenticationError) as ctx:
@@ -136,6 +139,8 @@ class TestGreenWebErrorHandling(unittest.TestCase):
         mock_response.status_code = 200
         mock_response.raise_for_status.return_value = None
         mock_response.text = "SMS rate is greater than your account balance"
+        mock_response.json.side_effect = JSONDecodeError("Not JSON", "", 0)
+        mock_response.headers = {}
         mock_post.return_value = mock_response
 
         with self.assertRaises(InsufficientBalanceError):

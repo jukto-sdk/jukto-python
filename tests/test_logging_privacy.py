@@ -40,8 +40,14 @@ def invoke(c, name):
 @respx.mock
 def test_adapter_logs_and_exceptions_exclude_sensitive_values(name, mode, caplog):
     c = make_client(name)
-    payload = {'error': 0, 'response_code': 202, 'status': 'success', 'message': ECHO,
-               'data': {'access_token': SECRETS[2], 'address': SECRETS[5]}}
+    payload = {
+        'AlphaSMS': {'error': 0, 'data': {'request_id': 123}, 'message': ECHO},
+        'BulkSMSBD': {'response_code': 202, 'message': ECHO},
+        'GreenWeb': [{'status': 'SENT', 'message': ECHO}],
+        'Steadfast': {'status': 200, 'consignment': {'consignment_id': 123}, 'message': ECHO},
+        'RedX': {'tracking_id': '123', 'message': ECHO},
+        'Pathao': {'data': {'consignment_id': '123'}, 'message': ECHO},
+    }[name]
     route = respx.route(host='provider.test')
     if mode == 'success':
         route.respond(200, json=payload)

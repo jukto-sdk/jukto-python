@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+from json import JSONDecodeError
 import httpx
+from jukto._responses import unexpected
+from jukto.results import SMSBatchResult
 from jukto._transport import secure_http_client
 
 from jukto.exceptions import (
@@ -10,6 +13,7 @@ from jukto.exceptions import (
     ProviderAuthenticationError,
     ProviderConnectionError,
     ProviderError,
+    SMSBatchError,
     ProviderRateLimitError,
     ProviderServerError,
     ProviderTimeoutError,
@@ -83,76 +87,76 @@ class GreenWebClient(BaseSMSProvider):
                 provider="GreenWeb",
             ) from None
 
+    def _batch_result(self, entries: list[Any], response: httpx.Response, raw: Any) -> SMSBatchResult:
+        if not entries:
+            raise unexpected(response, "GreenWeb", raw)
+        results = SMSBatchResult(entries)
+        if results.unknown_indices and not results.sent_indices and not results.failed_indices:
+            raise unexpected(response, "GreenWeb", raw)
+        if results.failed_indices or results.unknown_indices:
+            raise SMSBatchError(
+                "GreenWeb batch contains failed or unknown outcomes; inspect results before retrying",
+                results=results, status_code=response.status_code,
+                response_body=raw, provider="GreenWeb",
+            )
+        return results
+
     def _inspect_response_content(self, response: httpx.Response) -> Any:
-        """Inspect GreenWeb text or JSON content for provider-specific error indicators."""
-        raw_text = response.text.strip()
-        lower_text = raw_text.lower()
-
+        """Parse structured status first; never interpret echoed SMS content as errors."""
         logger.debug('provider=GreenWeb operation=inspect_response_content event=response')
-
-        # GreenWeb text-based error strings (often returned with HTTP 200)
-        if "invalid token" in lower_text or "token not found" in lower_text:
-            logger.error('provider=GreenWeb operation=inspect_response_content event=error')
-            raise ProviderAuthenticationError(
-                'GreenWeb authentication failed: [details withheld]',
-                status_code=response.status_code,
-                response_body=raw_text,
-                provider="GreenWeb",
-            )
-        if "account balance" in lower_text or "insufficient" in lower_text:
-            logger.error('provider=GreenWeb operation=inspect_response_content event=error')
-            raise InsufficientBalanceError(
-                'GreenWeb balance insufficient: [details withheld]',
-                status_code=response.status_code,
-                response_body=raw_text,
-                provider="GreenWeb",
-            )
-        if "invalid number" in lower_text or "invalid phone" in lower_text:
-            logger.error('provider=GreenWeb operation=inspect_response_content event=error')
-            raise InvalidRequestError(
-                'GreenWeb rejected recipient number: [details withheld]',
-                status_code=response.status_code,
-                response_body=raw_text,
-                provider="GreenWeb",
-            )
-
-        # Parse JSON response
+        raw_text = response.text.strip()
         try:
             data = response.json()
-        except Exception:
-            if "error" in lower_text:
-                raise ProviderError(
-                    'GreenWeb error: [details withheld]',
-                    status_code=response.status_code,
-                    response_body=raw_text,
-                    provider="GreenWeb",
-                )
-            return raw_text
+        except (JSONDecodeError, UnicodeDecodeError):
+            data = None
+            decoded = False
+        else:
+            decoded = True
 
-        # Inspect JSON array or dictionary for error status
-        if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
-            first_item = data[0]
-            if first_item.get("status") == "error":
-                msg = first_item.get("message") or first_item.get("statusmsg") or "GreenWeb error"
-                raise ProviderError(
-                    'GreenWeb error: [details withheld]',
-                    status_code=response.status_code,
-                    response_body=data,
-                    provider="GreenWeb",
-                )
-        elif isinstance(data, dict):
-            if data.get("status") == "error":
-                msg = data.get("message") or data.get("statusmsg") or "GreenWeb error"
-                raise ProviderError(
-                    'GreenWeb error: [details withheld]',
-                    status_code=response.status_code,
-                    response_body=data,
-                    provider="GreenWeb",
-                )
+        if decoded:
+            if isinstance(data, list):
+                return self._batch_result(data, response, data)
+            if isinstance(data, dict):
+                # Single-object envelopes are legacy compatibility, not the manual's list schema.
+                if data.get("status") in ("SENT", "FAILED"):
+                    result = self._batch_result([data], response, data)
+                    return data if result.sent_indices else result
+                if data.get("status") == "error":
+                    raise ProviderError(
+                        "GreenWeb returned an error; details withheld", status_code=response.status_code,
+                        response_body=data, provider="GreenWeb",
+                    )
+            raise unexpected(response, "GreenWeb", data)
 
-        return data
+        # A malformed JSON response must not be reclassified by embedded text phrases.
+        if "json" in response.headers.get("content-type", "").lower() or raw_text.startswith(("{", "[")):
+            raise unexpected(response, "GreenWeb", raw_text)
+        lines = raw_text.splitlines()
+        if lines and all(line.lower().startswith(("ok:", "error:")) for line in lines):
+            entries = [{"status": "SENT" if line.lower().startswith("ok:") else "FAILED", "raw_text": line}
+                       for line in lines]
+            result = self._batch_result(entries, response, raw_text)
+            return raw_text if len(lines) == 1 else result
 
-    def send_sms(self, phone_numbers: str | list[str], message: str) -> dict[str, Any] | list[Any]:
+        # Historical plain errors retained only as anchored prefixes, not whole-body substrings.
+        lower = raw_text.lower()
+        error_type = None
+        if lower.startswith(("invalid token", "token not found")):
+            error_type = ProviderAuthenticationError
+        elif lower.startswith(("sms rate is greater than your account balance", "sms rate exceeds account balance", "insufficient balance")):
+            error_type = InsufficientBalanceError
+        elif lower.startswith(("invalid number", "invalid phone")):
+            error_type = InvalidRequestError
+        elif lower.startswith(("error", "general gateway error")):
+            error_type = ProviderError
+        if error_type is not None:
+            raise error_type(
+                "GreenWeb returned an error; details withheld", status_code=response.status_code,
+                response_body=raw_text, provider="GreenWeb",
+            )
+        raise unexpected(response, "GreenWeb", raw_text)
+
+    def send_sms(self, phone_numbers: str | list[str], message: str) -> dict[str, Any] | list[Any] | str:
         if isinstance(phone_numbers, list):
             to_string = ",".join(phone_numbers)
         else:
@@ -162,7 +166,7 @@ class GreenWebClient(BaseSMSProvider):
             "token": self.api_key,
             "to": to_string,
             "message": message,
-            "json": "",
+            "json": "1",
         }
 
 

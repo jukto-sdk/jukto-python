@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 import httpx
+from jukto._responses import decode_json, error_body, require_object, unexpected
 from jukto._transport import secure_http_client, validate_endpoint
 
 from jukto.exceptions import (
@@ -48,17 +49,7 @@ class SteadfastClient(BaseLogisticsProvider):
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
         """Map httpx.HTTPStatusError to normalized Jukto exceptions."""
         status_code = exc.response.status_code
-        try:
-            body = exc.response.json()
-            message = (
-                body.get("message")
-                or body.get("error")
-                or (str(body.get("errors")) if body.get("errors") else None)
-                or str(body)
-            )
-        except Exception:
-            body = exc.response.text
-            message = body.strip() or exc.response.reason_phrase
+        body = error_body(exc.response)
 
         error_message = f'Steadfast API error ({status_code}): [details withheld]'
         logger.error('provider=Steadfast operation=handle_http_status_error event=error status=%d', status_code)
@@ -167,8 +158,17 @@ class SteadfastClient(BaseLogisticsProvider):
                 )
                 logger.debug('provider=Steadfast operation=request event=response status=%d', response.status_code)
                 response.raise_for_status()
-                data = response.json()
+                data = require_object(decode_json(response, "Steadfast"), response, "Steadfast")
                 self._handle_inline_errors(data)
+                content = data.get("consignment") if method == "POST" else data.get("delivery_status")
+                content_type = dict if method == "POST" else str
+                valid = (
+                    type(data.get("status")) is int and data["status"] == 200
+                    and isinstance(content, content_type) and bool(content)
+                    and (method != "POST" or bool(content.get("consignment_id")))
+                )
+                if not valid:
+                    raise unexpected(response, "Steadfast", data)
                 return data
         except httpx.TimeoutException as exc:
             logger.error('provider=Steadfast operation=request event=error')

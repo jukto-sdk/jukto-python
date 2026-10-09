@@ -1,0 +1,10 @@
+{
+  "source": "https://bdbulksms.com/bulk-sms-api-bd-english.php",
+  "provider_link": "https://api.greenweb.com.bd/ links to bdbulksms.com as its homepage",
+  "verified_on": "2026-10-10",
+  "evidence_kind": "official_documentation",
+  "json_statuses": ["SENT", "FAILED"],
+  "text_prefixes": ["Ok:", "Error:"],
+  "json_form_parameter": "1",
+  "notes": "The manual shows ordered per-recipient JSON entries and mixed outcomes. Test entries are synthetic. Status output is not independent delivery confirmation. Historical standalone text errors remain unverified compatibility rules. No transactions performed."
+}

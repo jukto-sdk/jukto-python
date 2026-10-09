@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from jukto.exceptions import (
     InsufficientBalanceError,
+    UnexpectedProviderResponseError,
+    SMSBatchError,
     InvalidRequestError,
     JuktoConfigurationError,
     JuktoError,
@@ -18,6 +20,7 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.interfaces.sms import BaseSMSProvider
+from jukto.results import SMSBatchResult
 from jukto.logger import enable_debug_logging, logger
 from jukto.providers.logistics.pathao import PathaoClient
 from jukto.providers.logistics.redx import RedXClient
@@ -41,6 +44,9 @@ __all__ = [
     "BulkSMSBDClient",
     # Exceptions
     "JuktoError",
+    "UnexpectedProviderResponseError",
+    "SMSBatchError",
+    "SMSBatchResult",
     "JuktoValidationError",
     "JuktoConfigurationError",
     "ProviderError",

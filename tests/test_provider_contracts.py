@@ -43,7 +43,7 @@ def test_alphasms_unknown_code_structure_is_not_success(payload):
     respx.post(client.base_url).respond(200, content=json.dumps(payload), headers={'Content-Type': 'application/json'})
     with pytest.raises(jukto.ProviderError) as caught:
         client.send_sms('01700000000', 'offline message')
-    assert type(caught.value) is jukto.ProviderError
+    assert type(caught.value) is jukto.UnexpectedProviderResponseError
     assert caught.value.response_body == payload
 
 

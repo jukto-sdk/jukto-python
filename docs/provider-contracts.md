@@ -13,7 +13,7 @@ Paths below are relative to the base URL. Unless explicitly marked verified, the
 | Steadfast | `https://portal.packzy.com/api/v1/create_order`, `/status_by_cid/{id}` | Headers Api-Key/Secret-Key; JSON invoice, recipient_name/phone/address, cod_amount, note | Raw JSON; integer body status >=400 mapped by adapter | [Official business page](https://steadfast.com.bd/business) confirms API offering, not this wire contract; **unverified** |
 | Pathao | `https://api-hermes.pathao.com/aladdin/api/v1/issue-token`, `/orders`, `/orders/{id}/info`, `/stores`; sandbox host courier-api-sandbox.pathao.com | Token request client_id/secret and password or refresh grant; orders use Bearer auth and store_id, merchant_order_id, recipient fields/geography, delivery_type, item_type, special_instruction, item_quantity/weight, amount_to_collect | Token access_token/refresh_token/expires_in; resource responses returned raw | [Official developer panel](https://merchant.pathao.com/courier/developer-api) returned JavaScript shell; **unverified** |
 | RedX | `https://openapi.redx.com.bd/v1.0.0-beta/parcels`, `/parcels/tracking/{id}`; sandbox host sandbox.redx.com.bd | Bearer; JSON customer_name/phone/address, delivery_area, merchant_invoice_id, cash_collection_amount, parcel_weight, instruction, value | Raw JSON; body status string error or integer >=400 interpreted by adapter | [Official OpenAPI host](https://openapi.redx.com.bd/) retrieval failed; [provider site](https://redx.com.bd/) exposed no specification; **unverified** |
-| GreenWeb | `https://api.greenweb.com.bd/api.php` | Form token, to, message, json | Text/JSON/list; heuristic text and status error inspection | [Official portal](https://api.greenweb.com.bd/) returned login page; **unverified** |
+| GreenWeb | `https://api.greenweb.com.bd/api.php` | Form token, to, message; json=1 | Per-recipient SENT/FAILED JSON list or Ok:/Error: text lines | [Official English manual](https://bdbulksms.com/bulk-sms-api-bd-english.php), linked via the portal's homepage; 2026-10-10; published JSON/text format verified, standalone text-error mappings remain legacy/unverified |
 
 HTTP status classifications in the adapters are SDK policies, not verification of each provider's application codes. Unverified adapters still require a future authoritative audit; existing tests are implementation regressions, not certifications.
 
@@ -131,3 +131,83 @@ Compatibility: provider message text no longer appears in `.message`, `str(error
 `repr(error)`, or ordinary chained traceback output. Consumers needing that text
 must deliberately inspect `response_body`; do not parse exception message strings
 for error classification. Masking now yields `***` instead of credential fragments.
+
+## Task 4: malformed responses and SMS batch outcomes
+
+`UnexpectedProviderResponseError` extends ProviderError/JuktoError and identifies
+JSON decoding or response-schema failures. Messages and normal tracebacks remain
+metadata-only; response_body preserves sensitive raw text or parsed evidence.
+It does not establish whether an order or SMS side effect occurred. Reconcile
+before retrying. HTTP failures retain HTTP-based classification even if the error
+body is a JSON scalar or array. Only JSONDecodeError/UnicodeDecodeError are caught
+by the common decoder; internal TypeError and other programming failures propagate.
+
+AlphaSMS requires its documented submission `data.request_id` on success. Its
+known application errors retain task 1 mappings. Oversized or noncanonical code
+strings and missing success evidence fail closed. BulkSMSBD still accepts the
+unverified legacy integer 202 only; no additional success schema was invented.
+
+Steadfast/RedX now guard their existing SDK-consumed success fields: Steadfast status
+200 with consignment evidence or delivery_status, RedX tracking_id or tracking.status.
+Pathao guards its existing data envelopes with consignment_id for create, order_status
+for tracking, or object/list store data. These are conservative **SDK compatibility
+policies**, not authoritative upstream schema certification. Unknown/missing envelopes
+and Pathao error/type indicators raise UnexpectedProviderResponseError. The official
+Pathao developer panel still exposes only a JavaScript shell; specific HTTP-200
+application-error mappings remain unresolved and the corresponding checklist item
+is open. No provider error code meanings were inferred from HTTP conventions.
+
+Pathao token issue/refresh also reject invalid JSON/object/access-token/expiry
+structures. Malformed refresh responses no longer trigger password-auth fallback;
+malformed replay responses and internal programming failures are no longer swallowed
+as the original 401. The broader refresh/replay policy, state atomicity, locking,
+and clock redesign remain task 5. Existing missing-token responses now raise an
+unexpected-response error rather than authentication failure or fallback success.
+
+### GreenWeb evidence and compatibility
+
+The official portal links to bdbulksms.com as its homepage. Its English manual
+at https://bdbulksms.com/bulk-sms-api-bd-english.php documents the existing GreenWeb
+endpoint, HTTPS, json=1, SENT/FAILED JSON entries, and Ok:/Error: text lines.
+Provenance is recorded in tests/fixtures/greenweb_contract.json. Regression entries
+are synthetic; no SMS transactions or demo-token submissions were performed.
+Do not copy that manual's disabled TLS verification examples; Jukto's TLS policy
+remains enabled.
+
+JSON is parsed before checking status. Echoed message or statusmsg content is not
+searched for error words. Lists are inspected in full, including malformed entries;
+unrecognized status values are unknown, never assumed successful. The documented
+json=1 option is now sent. Legacy single-object SENT/FAILED/error envelopes remain
+compatible. Historical standalone text errors are restricted to anchored prefixes
+and explicitly remain unverified; arbitrary plain text is rejected. Documented
+Ok:/Error: lines are evaluated individually, preserving mixed text outcomes.
+
+`SMSBatchResult` subclasses list, preserving ordered raw entries. Its sent_indices,
+failed_indices, and unknown_indices refer to response positions, **not guaranteed
+positions in the original recipient request**. For JSON, correlate using the original
+`to` field when present, not guessed ordering. SENT is provider output, not independent
+delivery confirmation. Raw entries and returned successful text may contain personal
+data and must not be logged.
+
+Successful JSON lists return SMSBatchResult (normal list operations still work).
+Batches with failed or unknown entries raise SMSBatchError, a ProviderError subclass,
+with `.results` and `.response_body`. Entirely unrecognized batches raise
+UnexpectedProviderResponseError while retaining the raw body. No automatic retry
+or failover is performed. Preserve successful entries and reconcile unknown outcomes;
+do not resend the whole batch. Single successful text responses retain the legacy
+string return shape; multi-line text responses use the batch representation.
+
+```python
+from jukto import SMSBatchError, UnexpectedProviderResponseError
+
+try:
+    results = client.send_sms(numbers, message)
+except SMSBatchError as error:
+    sent_positions = error.results.sent_indices
+    failed_positions = error.results.failed_indices
+    unknown_positions = error.results.unknown_indices
+    # Persist outcomes privately; reconcile before any targeted retry.
+except UnexpectedProviderResponseError:
+    # Submission outcome is unknown. Do not automatically resend.
+    pass
+```
