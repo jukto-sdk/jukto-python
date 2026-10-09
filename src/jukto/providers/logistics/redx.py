@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+from decimal import Decimal
 import httpx
 from jukto._responses import decode_json, error_body, require_object, unexpected
 from jukto._transport import secure_http_client, validate_endpoint
@@ -19,6 +20,8 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.logger import logger
+from jukto._shipments import validate_parcel, require_text, require_id, require_number
+from jukto.exceptions import JuktoValidationError
 
 
 class RedXClient(BaseLogisticsProvider):
@@ -45,7 +48,7 @@ class RedXClient(BaseLogisticsProvider):
             allow_insecure_http=allow_insecure_http,
         )
         self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "API-ACCESS-TOKEN": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -184,18 +187,31 @@ class RedXClient(BaseLogisticsProvider):
             ) from None
 
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
-        endpoint = f"{self.base_url}/parcels"
+        validate_parcel(parcel, "RedX")
+        require_text(self.api_key, "api_key", "RedX")
+        require_text(parcel.redx_delivery_area, "redx_delivery_area", "RedX")
+        require_id(parcel.redx_delivery_area_id, "redx_delivery_area_id", "RedX")
+        require_number(parcel.declared_value, "declared_value", "RedX")
+        if parcel.redx_pickup_store_id is not None:
+            require_id(parcel.redx_pickup_store_id, "redx_pickup_store_id", "RedX")
+        grams = Decimal(str(parcel.item_weight)) * 1000
+        if grams != grams.to_integral_value():
+            raise JuktoValidationError('item_weight must represent a whole number of grams.', provider="RedX")
+        endpoint = f"{self.base_url}/parcel"
         payload = {
             "customer_name": parcel.recipient_name,
             "customer_phone": parcel.recipient_phone,
-            "delivery_area": parcel.recipient_address,
+            "delivery_area": parcel.redx_delivery_area,
+            "delivery_area_id": parcel.redx_delivery_area_id,
             "customer_address": parcel.recipient_address,
             "merchant_invoice_id": parcel.invoice_id,
             "cash_collection_amount": parcel.cod_amount,
-            "parcel_weight": int(parcel.item_weight * 1000) if parcel.item_weight else 500,
+            "parcel_weight": int(grams),
             "instruction": parcel.note or "",
-            "value": parcel.cod_amount,
+            "value": parcel.declared_value,
         }
+        if parcel.redx_pickup_store_id is not None:
+            payload["pickup_store_id"] = parcel.redx_pickup_store_id
         return self._request("POST", endpoint, json=payload)
 
     def check_status(self, consignment_id: str) -> dict[str, Any]:

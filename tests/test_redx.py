@@ -22,7 +22,7 @@ def redx_client() -> RedXClient:
 
 @respx.mock
 def test_redx_create_order_success(redx_client: RedXClient, sample_parcel: Parcel):
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(
             200,
             json={"tracking_id": "REDX-88231", "message": "Parcel created successfully"},
@@ -48,7 +48,7 @@ def test_redx_check_status_success(redx_client: RedXClient):
 
 @respx.mock
 def test_redx_auth_error_401(redx_client: RedXClient, sample_parcel: Parcel):
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(401, json={"message": "Unauthorized token"})
     )
 
@@ -70,7 +70,7 @@ def test_redx_not_found_404(redx_client: RedXClient):
 
 @respx.mock
 def test_redx_invalid_request_400(redx_client: RedXClient, sample_parcel: Parcel):
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(422, json={"message": "Delivery area is required"})
     )
 
@@ -80,7 +80,7 @@ def test_redx_invalid_request_400(redx_client: RedXClient, sample_parcel: Parcel
 
 @respx.mock
 def test_redx_rate_limit_429(redx_client: RedXClient, sample_parcel: Parcel):
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(429, text="Too Many Requests")
     )
 
@@ -90,7 +90,7 @@ def test_redx_rate_limit_429(redx_client: RedXClient, sample_parcel: Parcel):
 
 @respx.mock
 def test_redx_server_error_500(redx_client: RedXClient, sample_parcel: Parcel):
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(500, text="Internal Server Error")
     )
 
@@ -100,7 +100,7 @@ def test_redx_server_error_500(redx_client: RedXClient, sample_parcel: Parcel):
 
 @respx.mock
 def test_redx_other_http_error(redx_client: RedXClient, sample_parcel: Parcel):
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(418, text="I'm a teapot")
     )
 
@@ -111,28 +111,28 @@ def test_redx_other_http_error(redx_client: RedXClient, sample_parcel: Parcel):
 @respx.mock
 def test_redx_inline_errors(redx_client: RedXClient, sample_parcel: Parcel):
     # Inline 401
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(200, json={"status": "error", "message": "Unauthorized access"})
     )
     with pytest.raises(ProviderAuthenticationError):
         redx_client.create_order(sample_parcel)
 
     # Inline 404
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(200, json={"status": 404, "message": "Not Found"})
     )
     with pytest.raises(ResourceNotFoundError):
         redx_client.create_order(sample_parcel)
 
     # Inline 400
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(200, json={"status": 400, "message": "Invalid address"})
     )
     with pytest.raises(InvalidRequestError):
         redx_client.create_order(sample_parcel)
 
     # Inline general
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         return_value=httpx.Response(200, json={"status": 500, "message": "Failed"})
     )
     with pytest.raises(ProviderError):
@@ -141,13 +141,13 @@ def test_redx_inline_errors(redx_client: RedXClient, sample_parcel: Parcel):
 
 @respx.mock
 def test_redx_timeout_and_network_error(redx_client: RedXClient, sample_parcel: Parcel):
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         side_effect=httpx.TimeoutException("Timeout")
     )
     with pytest.raises(ProviderTimeoutError):
         redx_client.create_order(sample_parcel)
 
-    respx.post(f"{redx_client.base_url}/parcels").mock(
+    respx.post(f"{redx_client.base_url}/parcel").mock(
         side_effect=httpx.NetworkError("Network failed")
     )
     with pytest.raises(ProviderConnectionError):

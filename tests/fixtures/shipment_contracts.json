@@ -1,0 +1,29 @@
+{
+  "verified_at": "2026-10-10",
+  "pathao": {
+    "source": "https://github.com/pathao-eng/courier-woocommerce-plugin/blob/main/pathao-bridge.php",
+    "source_sha256": "0e8c93123adaea0b0d8fb8f1613972842038a732f0d594a49e2fd472fc940a4f",
+    "source_kind": "provider-maintained integration serializer, makeDto; not complete API specification",
+    "optional_geography": ["recipient_city", "recipient_zone", "recipient_area"],
+    "policy": "omit absent geography; validate supplied IDs as positive integers without claiming membership verification"
+  },
+  "redx": {
+    "source": "https://redx.com.bd/developer-api/",
+    "bundle": "https://redx.com.bd/_next/static/chunks/pages/developer-api-fb24bbe4344e870c.js",
+    "source_sha256": "323ce7e69b14334da721aaab12b94c889b4099d393897ef64e560eae8381f70d",
+    "source_kind": "official developer page publicly served API specification bundle",
+    "create_endpoint": "/parcel",
+    "authentication_header": "API-ACCESS-TOKEN",
+    "required_fields": ["customer_name", "customer_phone", "delivery_area", "delivery_area_id", "customer_address", "cash_collection_amount", "parcel_weight", "value"],
+    "value_semantics": "declared value for compensation, separate from cash collection",
+    "delivery_area_semantics": "name of delivery area, not street address",
+    "delivery_area_id_semantics": "unique ID of RedX delivery area",
+    "optional_pickup_field": "pickup_store_id",
+    "weight_evidence": "getParcelDetails response describes parcel.parcel_weight as grams; create request table only says appropriate units (e.g., kg, g)",
+    "unresolved": ["create weight unit/range and fractional-gram rounding", "create JSON types conflict between request table and curl example", "phone syntax and length", "numeric amount precision and currency constraints", "tracking endpoint/response migration deferred"]
+  },
+  "steadfast": {
+    "source": "https://portal.packzy.com/api/v1",
+    "status": "unavailable; existing wire fields retained, local input policies not claimed as verified vendor constraints"
+  }
+}

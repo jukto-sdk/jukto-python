@@ -28,7 +28,7 @@ def client_for(name):
 def invoke(c, name):
     if name in ['AlphaSMS', 'BulkSMSBD', 'GreenWeb']:
         return c.send_sms('01700000000', 'offline message')
-    return c.create_order(jukto.Parcel('inv', 'name', '01700000000', 'address', 10, store_id=123))
+    return c.create_order(jukto.Parcel('inv', 'name', '01700000000', 'address', 10, store_id=123, declared_value=10, redx_delivery_area='Banani', redx_delivery_area_id=12))
 
 
 @pytest.mark.parametrize('name', NAMES)

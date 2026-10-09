@@ -17,6 +17,7 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.logger import logger
+from jukto._shipments import validate_parcel, require_text
 
 
 class SteadfastClient(BaseLogisticsProvider):
@@ -186,6 +187,9 @@ class SteadfastClient(BaseLogisticsProvider):
             ) from None
 
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
+        validate_parcel(parcel, "Steadfast")
+        require_text(self.api_key, "api_key", "Steadfast")
+        require_text(self.secret_key, "secret_key", "Steadfast")
         endpoint = f"{self.base_url}/create_order"
         payload = {
             "invoice": parcel.invoice_id,

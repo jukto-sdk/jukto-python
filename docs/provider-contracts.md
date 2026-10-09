@@ -12,7 +12,7 @@ Paths below are relative to the base URL. Unless explicitly marked verified, the
 | BulkSMSBD | `http://bulksmsbd.net/api/smsapi` | Form `api_key`, `type`, `number`, `senderid`, `message` | Integer `response_code`; legacy success 202 retained; all other integers raise generic ProviderError | [Provider site](https://bulksmsbd.net/) redirected to login; `/api` and `/api.php` retrieval failed; **unverified** |
 | Steadfast | `https://portal.packzy.com/api/v1/create_order`, `/status_by_cid/{id}` | Headers Api-Key/Secret-Key; JSON invoice, recipient_name/phone/address, cod_amount, note | Raw JSON; integer body status >=400 mapped by adapter | [Official business page](https://steadfast.com.bd/business) confirms API offering, not this wire contract; **unverified** |
 | Pathao | `https://api-hermes.pathao.com/aladdin/api/v1/issue-token`, `/orders`, `/orders/{id}/info`, `/stores`; sandbox host courier-api-sandbox.pathao.com | Token request client_id/secret and password or refresh grant; orders use Bearer auth and store_id, merchant_order_id, recipient fields/geography, delivery_type, item_type, special_instruction, item_quantity/weight, amount_to_collect | Token access_token/refresh_token/expires_in; resource responses returned raw | [Official developer panel](https://merchant.pathao.com/courier/developer-api) returned JavaScript shell; **unverified** |
-| RedX | `https://openapi.redx.com.bd/v1.0.0-beta/parcels`, `/parcels/tracking/{id}`; sandbox host sandbox.redx.com.bd | Bearer; JSON customer_name/phone/address, delivery_area, merchant_invoice_id, cash_collection_amount, parcel_weight, instruction, value | Raw JSON; body status string error or integer >=400 interpreted by adapter | [Official OpenAPI host](https://openapi.redx.com.bd/) retrieval failed; [provider site](https://redx.com.bd/) exposed no specification; **unverified** |
+| RedX | `https://openapi.redx.com.bd/v1.0.0-beta/parcel`, legacy `/parcels/tracking/{id}`; sandbox host sandbox.redx.com.bd | API-ACCESS-TOKEN Bearer; customer name/phone/address, RedX delivery_area/name and delivery_area_id, invoice, cash collection, weight, instruction, separate declared value, optional pickup_store_id | Raw JSON; create tracking_id; legacy tracking/error guards remain unverified | [Official developer specification bundle](https://redx.com.bd/_next/static/chunks/pages/developer-api-fb24bbe4344e870c.js), 2026-10-10: create fields/endpoint/auth verified; exact create weight units/types and legacy tracking contract unresolved; see task 6 |
 | GreenWeb | `https://api.greenweb.com.bd/api.php` | Form token, to, message; json=1 | Per-recipient SENT/FAILED JSON list or Ok:/Error: text lines | [Official English manual](https://bdbulksms.com/bulk-sms-api-bd-english.php), linked via the portal's homepage; 2026-10-10; published JSON/text format verified, standalone text-error mappings remain legacy/unverified |
 
 HTTP status classifications in the adapters are SDK policies, not verification of each provider's application codes. Unverified adapters still require a future authoritative audit; existing tests are implementation regressions, not certifications.
@@ -46,11 +46,11 @@ The old 1002/1003/1004/1005/1006/1007/1008/1010 classifications and message-subs
 
 Resolution requires a provider-issued specification/API-page export or sanitized responses with recorded endpoint, API version, date, and provenance. No credentials should be included.
 
-## Unresolved RedX shipment contract
+## RedX shipment contract: task 1 findings (superseded in part by task 6)
 
-The current adapter places the full address into delivery_area, ignores recipient_area, multiplies item_weight by 1000, and sets value equal to COD. None of these choices was independently verified in this audit.
+At the task 1 baseline, the adapter placed the full address into delivery_area, ignores recipient_area, multiplies item_weight by 1000, and sets value equal to COD. None of these choices was independently verified in this audit.
 
-Obtain the official create-parcel schema defining geographic name/ID fields and lookup relationship, parcel_weight units/range/rounding, value meaning and requiredness, cash_collection_amount semantics, pickup-store requirements, response envelope, and error table. Do not invent delivery_area_id or change weight units based on unofficial examples. No RedX payload change was made; model/payload remediation belongs to task 6 once evidence is available.
+Obtain the official create-parcel schema defining geographic name/ID fields and lookup relationship, parcel_weight units/range/rounding, value meaning and requiredness, cash_collection_amount semantics, pickup-store requirements, response envelope, and error table. Do not invent delivery_area_id or change weight units based on unofficial examples. Task 1 made no RedX payload change. The task 6 section below records newly retrieved primary evidence, corrections, and remaining ambiguities.
 
 ## Compatibility changes in this task
 
@@ -254,3 +254,84 @@ application retries. No live shipment or credentialed authentication was perform
 Offline lifecycle regressions cover final retry failures, transient refresh outages,
 malformed token state, rotation, short lifetimes, clock jumps, concurrent expiry,
 concurrent stale 401, and default refusal to replay shipment creation.
+
+## Shipment input validation and migration (task 6, 2026-10-10)
+
+All three adapters validate the Parcel again at submission, including mutations
+made after construction, before any HTTP client or Pathao token exchange. Nonblank
+string invoice/name/phone/address, positive integer quantity, finite positive numeric
+weight, finite nonnegative numeric COD, and configured nonblank credentials are SDK
+input policies. Booleans, numeric strings, NaN/infinity, unrepresentable numeric
+magnitudes, and nonstring notes are rejected with JuktoValidationError. Error text
+names fields without echoing their values. This does not verify deliverability,
+phone syntax, geographic membership, vendor limits, or monetary precision.
+
+### Pathao evidence
+
+The provider-maintained [pathao-bridge.php makeDto serializer](https://github.com/pathao-eng/courier-woocommerce-plugin/blob/main/pathao-bridge.php)
+conditionally includes city/zone/area only when supplied, rather than filling them
+with 1. Jukto now follows that behavior: None omits the field; explicit values must
+be positive integers. No cross-provider geography translation occurs. Parcel.store_id
+uses the client default only for None; explicit zero no longer silently overrides
+it. Store ID must be positive. Delivery/item type must be positive integers;
+accepted enum values, weight units/range, address-dependent omission acceptance,
+phone constraints, and complete provider requirements remain unresolved. A maintained
+integration is narrower evidence than a normative API specification. No new vendor
+limits or enums are guessed. Existing item_weight numeric serialization is retained.
+
+### RedX evidence and corrections
+
+The official [developer page](https://redx.com.bd/developer-api/) exposes its published
+specification in [this versioned JavaScript bundle](https://redx.com.bd/_next/static/chunks/pages/developer-api-fb24bbe4344e870c.js).
+Its Create Parcel specification confirms `/parcel`, `API-ACCESS-TOKEN: Bearer ...`,
+a delivery-area name and integer ID, independent cash collection and declared
+value for compensation, and optional pickup_store_id. Consequently create_order
+now uses that endpoint/header and requires explicit `declared_value`,
+`redx_delivery_area`, and `redx_delivery_area_id`. It sends optional
+`redx_pickup_store_id` only when supplied. It does not use Pathao's city/zone/area
+or store_id. Example prepaid inputs:
+
+```python
+parcel = Parcel(
+    invoice_id="INV-1", recipient_name="Example Customer",
+    recipient_phone="01700000000", recipient_address="Example street address",
+    cod_amount=0, declared_value=1200,
+    redx_delivery_area="Banani", redx_delivery_area_id=12, item_weight=0.5,
+)
+```
+
+Area names/IDs above are illustrative; obtain matching values from RedX's own
+`/areas` specification/service. Jukto validates shape, not existence or the pairing.
+Declared value is never inferred from COD: existing RedX callers must now provide
+it, including when COD is zero. These new optional Parcel fields are appended,
+preserving existing positional arguments. Pathao/Steadfast do not serialize declared
+value because a supported field has not been verified for those adapters.
+
+**Remaining RedX ambiguity:** the create table labels weight and value as strings,
+while its curl example uses numeric weight/value; the parcel-detail specification
+describes returned weight in grams, but the create table ambiguously mentions kg/g.
+The officially linked [WooCommerce plugin](https://wordpress.org/plugins/redx-for-woocommerce/)
+(version downloaded from WordPress) uses integer weights and numeric amount/value
+on its distinct `/wordpress/parcel` endpoint, so it is corroborating evidence, not
+proof of identical types on `/parcel`. Jukto retains the legacy SDK convention:
+item_weight in kilograms converted to integer grams, numeric cash/value. It now
+rejects fractional grams instead of truncating them or inventing a 500g fallback.
+Create weight units/range/rounding and exact accepted JSON number/string types still
+require provider confirmation. Offline tests assert this **SDK policy**, not live
+compatibility. RedX tracking endpoint/response changes are outside task 6; the legacy
+`/parcels/tracking/{id}` route and guards remain unverified. The shared RedX auth
+header is now the documented API-ACCESS-TOKEN for both operations.
+
+### Evidence record and limits
+
+`tests/fixtures/shipment_contracts.json` records source provenance and unresolved
+contracts. Retrieved public-source SHA-256 digests:
+
+- RedX bundle: `323ce7e69b14334da721aaab12b94c889b4099d393897ef64e560eae8381f70d`
+- Pathao bridge: `0e8c93123adaea0b0d8fb8f1613972842038a732f0d594a49e2fd472fc940a4f`
+
+Steadfast's specification remained inaccessible; its existing payload is unchanged,
+and local validation is explicitly SDK policy. Exact provider phone formats, lengths,
+amount precision/currency, and maximum quantity/weight remain unresolved across
+these providers. No regex, region defaults, minimum monetary value, or undocumented
+vendor limits were added. All checks were offline; no shipments were created.

@@ -12,7 +12,6 @@ from jukto._transport import secure_http_client, validate_endpoint
 
 from jukto.exceptions import (
     InvalidRequestError,
-    JuktoValidationError,
     ProviderAuthenticationError,
     ProviderConnectionError,
     ProviderError,
@@ -23,6 +22,7 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.logger import logger
+from jukto._shipments import validate_parcel, require_id, require_text
 
 
 class PathaoClient(BaseLogisticsProvider):
@@ -237,12 +237,17 @@ class PathaoClient(BaseLogisticsProvider):
         raise AssertionError("unreachable retry state")
 
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
-        store_id = parcel.store_id or self.store_id
-        if not store_id:
-            raise JuktoValidationError(
-                "store_id is required for Pathao orders. Pass store_id in PathaoClient(...) or Parcel(store_id=...).",
-                provider="Pathao",
-            )
+        validate_parcel(parcel, "Pathao")
+        for name in ("client_id", "client_secret", "username", "password"):
+            require_text(getattr(self, name), name, "Pathao")
+        store_id = self.store_id if parcel.store_id is None else parcel.store_id
+        require_id(store_id, "store_id", "Pathao")
+        for name in ("recipient_city", "recipient_zone", "recipient_area"):
+            value = getattr(parcel, name)
+            if value is not None:
+                require_id(value, name, "Pathao")
+        require_id(parcel.item_type, "item_type", "Pathao")
+        require_id(parcel.delivery_type, "delivery_type", "Pathao")
 
         endpoint = f"{self.base_url}/aladdin/api/v1/orders"
         payload = {
@@ -251,9 +256,6 @@ class PathaoClient(BaseLogisticsProvider):
             "recipient_name": parcel.recipient_name,
             "recipient_phone": parcel.recipient_phone,
             "recipient_address": parcel.recipient_address,
-            "recipient_city": parcel.recipient_city or 1,
-            "recipient_zone": parcel.recipient_zone or 1,
-            "recipient_area": parcel.recipient_area or 1,
             "delivery_type": parcel.delivery_type,
             "item_type": parcel.item_type,
             "special_instruction": parcel.note or "",
@@ -261,6 +263,9 @@ class PathaoClient(BaseLogisticsProvider):
             "item_weight": parcel.item_weight,
             "amount_to_collect": parcel.cod_amount,
         }
+        for name in ("recipient_city", "recipient_zone", "recipient_area"):
+            if getattr(parcel, name) is not None:
+                payload[name] = getattr(parcel, name)
         return self._request("POST", endpoint, json=payload)
 
     def check_status(self, consignment_id: str) -> dict[str, Any]:

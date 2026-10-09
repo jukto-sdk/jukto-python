@@ -23,6 +23,11 @@ class Parcel:
     item_quantity: int = 1
     item_type: int = 2  # 1: Document, 2: Parcel
     delivery_type: int = 48  # 48: Normal Delivery (Pathao default)
+    # Independent goods value; never inferred from COD. RedX-only routing fields.
+    declared_value: Optional[float] = None
+    redx_delivery_area: Optional[str] = None
+    redx_delivery_area_id: Optional[int] = None
+    redx_pickup_store_id: Optional[int] = None
 
 
 class BaseLogisticsProvider(ABC):

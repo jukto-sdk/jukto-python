@@ -12,6 +12,9 @@ def sample_parcel() -> Parcel:
         cod_amount=1500.0,
         note="Call before delivery",
         store_id=123,
+        declared_value=1500.0,
+        redx_delivery_area="Banani",
+        redx_delivery_area_id=12,
     )
 
 
