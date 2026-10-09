@@ -17,7 +17,7 @@ from jukto.exceptions import (
     ResourceNotFoundError,
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
-from jukto.logger import logger, mask_sensitive
+from jukto.logger import logger
 
 
 class RedXClient(BaseLogisticsProvider):
@@ -63,8 +63,8 @@ class RedXClient(BaseLogisticsProvider):
             body = exc.response.text
             message = body.strip() or exc.response.reason_phrase
 
-        error_message = f"RedX API error ({status_code}): {message}"
-        logger.error("RedX HTTP error [%d]: %s", status_code, message)
+        error_message = f'RedX API error ({status_code}): [details withheld]'
+        logger.error('provider=RedX operation=handle_http_status_error event=error status=%d', status_code)
 
         if status_code in (401, 403):
             raise ProviderAuthenticationError(
@@ -72,42 +72,42 @@ class RedXClient(BaseLogisticsProvider):
                 status_code=status_code,
                 response_body=body,
                 provider="RedX",
-            ) from exc
+            ) from None
         elif status_code == 404:
             raise ResourceNotFoundError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="RedX",
-            ) from exc
+            ) from None
         elif status_code in (400, 422):
             raise InvalidRequestError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="RedX",
-            ) from exc
+            ) from None
         elif status_code == 429:
             raise ProviderRateLimitError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="RedX",
-            ) from exc
+            ) from None
         elif status_code >= 500:
             raise ProviderServerError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="RedX",
-            ) from exc
+            ) from None
         else:
             raise ProviderError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="RedX",
-            ) from exc
+            ) from None
 
     def _handle_inline_errors(self, data: Any) -> None:
         if not isinstance(data, dict):
@@ -118,8 +118,8 @@ class RedXClient(BaseLogisticsProvider):
         if status == "error" or (isinstance(status, int) and status >= 400):
             message = data.get("message") or data.get("error") or "RedX returned an error"
             code = status if isinstance(status, int) else 400
-            error_message = f"RedX error: {message}"
-            logger.error("RedX inline error: %s", error_message)
+            error_message = 'RedX error: [details withheld]'
+            logger.error('provider=RedX operation=handle_inline_errors event=error')
 
             if code in (401, 403) or "unauthorized" in str(message).lower():
                 raise ProviderAuthenticationError(
@@ -153,8 +153,8 @@ class RedXClient(BaseLogisticsProvider):
     def _request(self, method: str, endpoint: str, **kwargs: Any) -> dict[str, Any]:
         validate_endpoint(endpoint, self.allow_insecure_http)
         kwargs["follow_redirects"] = False
-        masked_json = mask_sensitive(kwargs.get("json")) if "json" in kwargs else None
-        logger.debug("RedX request: %s %s | payload: %s", method, endpoint, masked_json)
+
+        logger.debug('provider=RedX operation=request event=request')
 
         try:
             with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
@@ -164,26 +164,26 @@ class RedXClient(BaseLogisticsProvider):
                     headers=self.headers,
                     **kwargs,
                 )
-                logger.debug("RedX response [%d]: %s", response.status_code, response.text[:200])
+                logger.debug('provider=RedX operation=request event=response status=%d', response.status_code)
                 response.raise_for_status()
                 data = response.json()
                 self._handle_inline_errors(data)
                 return data
         except httpx.TimeoutException as exc:
-            logger.error("RedX request timeout: %s", exc)
+            logger.error('provider=RedX operation=request event=timeout')
             raise ProviderTimeoutError(
-                f"Request to RedX timed out: {exc}",
+                'Request to RedX timed out: [details withheld]',
                 provider="RedX",
-            ) from exc
+            ) from None
         except httpx.HTTPStatusError as exc:
             self._handle_http_status_error(exc)
             raise
         except httpx.RequestError as exc:
-            logger.error("RedX network failure: %s", exc)
+            logger.error('provider=RedX operation=request event=error')
             raise ProviderConnectionError(
-                f"Failed to connect to RedX: {exc}",
+                'Failed to connect to RedX: [details withheld]',
                 provider="RedX",
-            ) from exc
+            ) from None
 
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
         endpoint = f"{self.base_url}/parcels"

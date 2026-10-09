@@ -136,7 +136,11 @@ except JuktoError as err:
 ```
 
 ### Enable Native Debug Logging
-Jukto automatically masks your API keys and tokens in the logs!
+Jukto debug logs contain metadata only: provider, operation, event, and HTTP status
+where available. Request/response payloads, URLs, credentials, and SMS content are
+excluded. Provider exception messages withhold raw details; `response_body` remains
+available for deliberate, sensitive inspection. See the
+[logging privacy policy](docs/provider-contracts.md#task-3-logging-and-exception-privacy).
 
 ```python
 from jukto import enable_debug_logging, SteadfastClient

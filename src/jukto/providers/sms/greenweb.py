@@ -15,7 +15,7 @@ from jukto.exceptions import (
     ProviderTimeoutError,
 )
 from jukto.interfaces.sms import BaseSMSProvider
-from jukto.logger import logger, mask_sensitive
+from jukto.logger import logger
 
 
 class GreenWebClient(BaseSMSProvider):
@@ -44,8 +44,8 @@ class GreenWebClient(BaseSMSProvider):
         """Map httpx.HTTPStatusError to normalized Jukto exceptions."""
         status_code = exc.response.status_code
         text = exc.response.text.strip()
-        error_message = f"GreenWeb API error ({status_code}): {text or exc.response.reason_phrase}"
-        logger.error("GreenWeb HTTP error [%d]: %s", status_code, text)
+        error_message = f'GreenWeb API error ({status_code}): [details withheld]'
+        logger.error('provider=GreenWeb operation=handle_http_status_error event=error status=%d', status_code)
 
         if status_code in (401, 403):
             raise ProviderAuthenticationError(
@@ -53,64 +53,64 @@ class GreenWebClient(BaseSMSProvider):
                 status_code=status_code,
                 response_body=text,
                 provider="GreenWeb",
-            ) from exc
+            ) from None
         elif status_code == 429:
             raise ProviderRateLimitError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="GreenWeb",
-            ) from exc
+            ) from None
         elif status_code in (400, 422):
             raise InvalidRequestError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="GreenWeb",
-            ) from exc
+            ) from None
         elif status_code >= 500:
             raise ProviderServerError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="GreenWeb",
-            ) from exc
+            ) from None
         else:
             raise ProviderError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="GreenWeb",
-            ) from exc
+            ) from None
 
     def _inspect_response_content(self, response: httpx.Response) -> Any:
         """Inspect GreenWeb text or JSON content for provider-specific error indicators."""
         raw_text = response.text.strip()
         lower_text = raw_text.lower()
 
-        logger.debug("GreenWeb response content: %s", raw_text[:200])
+        logger.debug('provider=GreenWeb operation=inspect_response_content event=response')
 
         # GreenWeb text-based error strings (often returned with HTTP 200)
         if "invalid token" in lower_text or "token not found" in lower_text:
-            logger.error("GreenWeb authentication failure: %s", raw_text)
+            logger.error('provider=GreenWeb operation=inspect_response_content event=error')
             raise ProviderAuthenticationError(
-                f"GreenWeb authentication failed: {raw_text}",
+                'GreenWeb authentication failed: [details withheld]',
                 status_code=response.status_code,
                 response_body=raw_text,
                 provider="GreenWeb",
             )
         if "account balance" in lower_text or "insufficient" in lower_text:
-            logger.error("GreenWeb balance depleted: %s", raw_text)
+            logger.error('provider=GreenWeb operation=inspect_response_content event=error')
             raise InsufficientBalanceError(
-                f"GreenWeb balance insufficient: {raw_text}",
+                'GreenWeb balance insufficient: [details withheld]',
                 status_code=response.status_code,
                 response_body=raw_text,
                 provider="GreenWeb",
             )
         if "invalid number" in lower_text or "invalid phone" in lower_text:
-            logger.error("GreenWeb invalid recipient: %s", raw_text)
+            logger.error('provider=GreenWeb operation=inspect_response_content event=error')
             raise InvalidRequestError(
-                f"GreenWeb rejected recipient number: {raw_text}",
+                'GreenWeb rejected recipient number: [details withheld]',
                 status_code=response.status_code,
                 response_body=raw_text,
                 provider="GreenWeb",
@@ -122,7 +122,7 @@ class GreenWebClient(BaseSMSProvider):
         except Exception:
             if "error" in lower_text:
                 raise ProviderError(
-                    f"GreenWeb error: {raw_text}",
+                    'GreenWeb error: [details withheld]',
                     status_code=response.status_code,
                     response_body=raw_text,
                     provider="GreenWeb",
@@ -135,7 +135,7 @@ class GreenWebClient(BaseSMSProvider):
             if first_item.get("status") == "error":
                 msg = first_item.get("message") or first_item.get("statusmsg") or "GreenWeb error"
                 raise ProviderError(
-                    f"GreenWeb error: {msg}",
+                    'GreenWeb error: [details withheld]',
                     status_code=response.status_code,
                     response_body=data,
                     provider="GreenWeb",
@@ -144,7 +144,7 @@ class GreenWebClient(BaseSMSProvider):
             if data.get("status") == "error":
                 msg = data.get("message") or data.get("statusmsg") or "GreenWeb error"
                 raise ProviderError(
-                    f"GreenWeb error: {msg}",
+                    'GreenWeb error: [details withheld]',
                     status_code=response.status_code,
                     response_body=data,
                     provider="GreenWeb",
@@ -165,26 +165,26 @@ class GreenWebClient(BaseSMSProvider):
             "json": "",
         }
 
-        masked_payload = mask_sensitive(payload)
-        logger.debug("GreenWeb request to %s | payload: %s", self.base_url, masked_payload)
+
+        logger.debug('provider=GreenWeb operation=send_sms event=request')
 
         try:
             with secure_http_client(self.base_url, self.timeout, self.allow_insecure_http) as client:
                 response = client.post(self.base_url, data=payload)
-                logger.debug("GreenWeb HTTP status: %d", response.status_code)
+                logger.debug('provider=GreenWeb operation=send_sms event=response status=%d', response.status_code)
                 response.raise_for_status()
                 return self._inspect_response_content(response)
         except httpx.TimeoutException as exc:
-            logger.error("GreenWeb request timeout: %s", exc)
+            logger.error('provider=GreenWeb operation=send_sms event=timeout')
             raise ProviderTimeoutError(
-                f"Request to GreenWeb timed out: {exc}",
+                'Request to GreenWeb timed out: [details withheld]',
                 provider="GreenWeb",
-            ) from exc
+            ) from None
         except httpx.HTTPStatusError as exc:
             self._handle_http_status_error(exc)
         except httpx.RequestError as exc:
-            logger.error("GreenWeb network failure: %s", exc)
+            logger.error('provider=GreenWeb operation=send_sms event=error')
             raise ProviderConnectionError(
-                f"Failed to connect to GreenWeb: {exc}",
+                'Failed to connect to GreenWeb: [details withheld]',
                 provider="GreenWeb",
-            ) from exc
+            ) from None

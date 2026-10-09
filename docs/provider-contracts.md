@@ -93,3 +93,41 @@ or authorized, provenance-recorded sandbox evidence confirms HTTPS SMS submissio
 Compatibility: existing custom HTTP endpoints and default BulkSMSBD construction
 must now opt in explicitly. Prefer confirmed HTTPS endpoints. Endpoint policy
 failures raise JuktoConfigurationError before HTTP requests are made.
+
+## Task 3: logging and exception privacy
+
+Jukto adapters emit only fixed provider/operation/event metadata and HTTP status
+where available. They do not log request or response payloads, URLs, headers,
+recipient data, SMS/OTP content, token responses, usernames, or underlying exception
+text. No diagnostic payload-logging option is retained. `enable_debug_logging()`
+changes the Jukto logger's level/handler, not this metadata-only policy.
+
+`mask_sensitive()` now replaces complete known credential values with `***`,
+regardless of value type, including nested dictionaries/lists. It returns a copy
+and does not reveal credential prefixes/suffixes. This helper is not a universal
+personal-data sanitizer: unknown fields and scalar strings are unchanged, and
+adapters no longer use it to justify logging arbitrary payloads.
+
+SDK-generated provider exception messages, `str`, and `repr` withhold provider
+messages and underlying network-error text because these can echo credentials,
+URLs, OTPs, or recipient data. Raw upstream chains are suppressed in normal
+formatted tracebacks. Exception types, provider identifiers, and codes remain
+available; HTTP/application classification and retry behavior are unchanged.
+
+`error.response_body` intentionally retains the original parsed body or raw text
+for deliberate investigation. Treat it as sensitive: do not print it, serialize
+it into public API responses, attach it to issue reports, or log it without your
+own reviewed sanitization. Explicit inspection of exception context/request objects
+can likewise reveal sensitive data. Application-created JuktoError messages are
+not automatically scrubbed; callers must not put secrets in those messages.
+
+This policy covers SDK-generated diagnostics on the `jukto` logger. It does not
+sanitize independently enabled HTTPX/httpcore logs, application logs, debugger
+locals, or external error-reporting tools. Configure those separately. Existing
+malformed-response failures outside JuktoError remain task 4; this is not a claim
+that arbitrary upstream exceptions have all been normalized.
+
+Compatibility: provider message text no longer appears in `.message`, `str(error)`,
+`repr(error)`, or ordinary chained traceback output. Consumers needing that text
+must deliberately inspect `response_body`; do not parse exception message strings
+for error classification. Masking now yields `***` instead of credential fragments.

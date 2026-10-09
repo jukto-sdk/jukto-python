@@ -15,7 +15,8 @@ logger.addHandler(logging.NullHandler())
 def enable_debug_logging(level: int = logging.DEBUG) -> logging.Handler:
     """Convenience helper to attach a formatted StreamHandler to the Jukto logger.
 
-    Useful for development and debugging third-party API interactions.
+    Adapter diagnostics contain metadata only, never request/response payloads.
+    This configures the jukto logger, not third-party loggers such as httpx.
     """
     logger.setLevel(level)
 
@@ -37,7 +38,7 @@ def enable_debug_logging(level: int = logging.DEBUG) -> logging.Handler:
 
 
 def mask_sensitive(data: Any) -> Any:
-    """Mask sensitive keys (passwords, tokens, secret keys) in log payloads."""
+    """Fully redact known credential values; this is not a general payload sanitizer."""
     sensitive_keys = {
         "api_key",
         "secret_key",
@@ -49,12 +50,16 @@ def mask_sensitive(data: Any) -> Any:
         "api-key",
         "secret-key",
         "authorization",
+        "x-api-key",
+        "apikey",
+        "store_passwd",
+        "private_key",
     }
     if isinstance(data, dict):
         masked: dict[str, Any] = {}
         for k, v in data.items():
-            if str(k).lower() in sensitive_keys and isinstance(v, str):
-                masked[k] = f"{v[:3]}...{v[-3:]}" if len(v) > 6 else "***"
+            if str(k).lower() in sensitive_keys:
+                masked[k] = "***"
             elif isinstance(v, (dict, list)):
                 masked[k] = mask_sensitive(v)
             else:

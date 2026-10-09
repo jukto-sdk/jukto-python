@@ -16,7 +16,7 @@ from jukto.exceptions import (
     ProviderTimeoutError,
 )
 from jukto.interfaces.sms import BaseSMSProvider
-from jukto.logger import logger, mask_sensitive
+from jukto.logger import logger
 
 
 class BulkSMSBDClient(BaseSMSProvider):
@@ -44,8 +44,8 @@ class BulkSMSBDClient(BaseSMSProvider):
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
         status_code = exc.response.status_code
         text = exc.response.text.strip()
-        error_message = f"BulkSMSBD API error ({status_code}): {text or exc.response.reason_phrase}"
-        logger.error("BulkSMSBD HTTP error [%d]: %s", status_code, text)
+        error_message = f'BulkSMSBD API error ({status_code}): [details withheld]'
+        logger.error('provider=BulkSMSBD operation=handle_http_status_error event=error status=%d', status_code)
 
         if status_code in (401, 403):
             raise ProviderAuthenticationError(
@@ -53,35 +53,35 @@ class BulkSMSBDClient(BaseSMSProvider):
                 status_code=status_code,
                 response_body=text,
                 provider="BulkSMSBD",
-            ) from exc
+            ) from None
         elif status_code == 429:
             raise ProviderRateLimitError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="BulkSMSBD",
-            ) from exc
+            ) from None
         elif status_code in (400, 422):
             raise InvalidRequestError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="BulkSMSBD",
-            ) from exc
+            ) from None
         elif status_code >= 500:
             raise ProviderServerError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="BulkSMSBD",
-            ) from exc
+            ) from None
         else:
             raise ProviderError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="BulkSMSBD",
-            ) from exc
+            ) from None
 
     def _inspect_response_data(self, data: Any, response: httpx.Response) -> dict[str, Any]:
         """Preserve codes without assigning unverified provider-specific meanings.
@@ -104,7 +104,7 @@ class BulkSMSBDClient(BaseSMSProvider):
 
         message = data.get("error_message") or data.get("message") or "Unclassified provider error"
         raise ProviderError(
-            f"BulkSMSBD error ({response_code}): {message}",
+            f'BulkSMSBD error ({response_code}): [details withheld]',
             status_code=response_code,
             response_body=data,
             provider="BulkSMSBD",
@@ -124,26 +124,26 @@ class BulkSMSBDClient(BaseSMSProvider):
             "message": message,
         }
 
-        masked = mask_sensitive(payload)
-        logger.debug("BulkSMSBD request to %s | payload: %s", self.base_url, masked)
+
+        logger.debug('provider=BulkSMSBD operation=send_sms event=request')
 
         try:
             with secure_http_client(self.base_url, self.timeout, self.allow_insecure_http) as client:
                 response = client.post(self.base_url, data=payload)
-                logger.debug("BulkSMSBD HTTP status: %d", response.status_code)
+                logger.debug('provider=BulkSMSBD operation=send_sms event=response status=%d', response.status_code)
                 response.raise_for_status()
                 data = response.json()
                 return self._inspect_response_data(data, response)
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(
-                f"BulkSMSBD request timed out: {exc}",
+                'BulkSMSBD request timed out: [details withheld]',
                 provider="BulkSMSBD",
-            ) from exc
+            ) from None
         except httpx.HTTPStatusError as exc:
             self._handle_http_status_error(exc)
             raise
         except httpx.RequestError as exc:
             raise ProviderConnectionError(
-                f"Failed to connect to BulkSMSBD: {exc}",
+                'Failed to connect to BulkSMSBD: [details withheld]',
                 provider="BulkSMSBD",
-            ) from exc
+            ) from None

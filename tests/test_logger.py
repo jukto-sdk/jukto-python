@@ -31,7 +31,7 @@ def test_mask_sensitive():
     masked = mask_sensitive(payload)
     assert masked["recipient_name"] == "Mehedi"
     assert masked["api_key"] != "secret_api_key_12345"
-    assert "..." in masked["api_key"]
+    assert masked["api_key"] == "***"
     assert masked["password"] == "***"
     assert masked["nested"]["token"] != "bearer_jwt_token_abcdef"
     assert masked["nested"]["cod_amount"] == 500
@@ -40,7 +40,7 @@ def test_mask_sensitive():
 
     # Test top-level list
     masked_list = mask_sensitive([{"api_key": "123456789"}])
-    assert "..." in masked_list[0]["api_key"]
+    assert masked_list[0]["api_key"] == "***"
 
     # Test scalar string (to hit scalar return data branch)
     assert mask_sensitive("simple_scalar") == "simple_scalar"

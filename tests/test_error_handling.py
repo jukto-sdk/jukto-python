@@ -60,7 +60,8 @@ class TestSteadfastErrorHandling(unittest.TestCase):
             self.client.create_order(self.sample_parcel)
 
         self.assertEqual(ctx.exception.status_code, 400)
-        self.assertIn("Phone number is invalid", str(ctx.exception))
+        self.assertNotIn("Phone number is invalid", str(ctx.exception))
+        self.assertEqual(ctx.exception.response_body["message"], "Phone number is invalid")
 
     @patch("httpx.Client.request")
     def test_resource_not_found_404(self, mock_request):

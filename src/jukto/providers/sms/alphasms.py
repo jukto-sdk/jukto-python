@@ -18,7 +18,7 @@ from jukto.exceptions import (
     ResourceNotFoundError,
 )
 from jukto.interfaces.sms import BaseSMSProvider
-from jukto.logger import logger, mask_sensitive
+from jukto.logger import logger
 
 
 class AlphaSMSClient(BaseSMSProvider):
@@ -46,8 +46,8 @@ class AlphaSMSClient(BaseSMSProvider):
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
         status_code = exc.response.status_code
         text = exc.response.text.strip()
-        error_message = f"AlphaSMS API error ({status_code}): {text or exc.response.reason_phrase}"
-        logger.error("AlphaSMS HTTP status error [%d]: %s", status_code, text)
+        error_message = f'AlphaSMS API error ({status_code}): [details withheld]'
+        logger.error('provider=AlphaSMS operation=handle_http_status_error event=response status=%d', status_code)
 
         if status_code in (401, 403):
             raise ProviderAuthenticationError(
@@ -55,35 +55,35 @@ class AlphaSMSClient(BaseSMSProvider):
                 status_code=status_code,
                 response_body=text,
                 provider="AlphaSMS",
-            ) from exc
+            ) from None
         elif status_code == 429:
             raise ProviderRateLimitError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="AlphaSMS",
-            ) from exc
+            ) from None
         elif status_code in (400, 422):
             raise InvalidRequestError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="AlphaSMS",
-            ) from exc
+            ) from None
         elif status_code >= 500:
             raise ProviderServerError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="AlphaSMS",
-            ) from exc
+            ) from None
         else:
             raise ProviderError(
                 error_message,
                 status_code=status_code,
                 response_body=text,
                 provider="AlphaSMS",
-            ) from exc
+            ) from None
 
     def _inspect_response_data(self, data: Any, response: httpx.Response) -> dict[str, Any]:
         """Classify documented codes; provenance: tests/fixtures/alphasms_contract.json."""
@@ -124,8 +124,8 @@ class AlphaSMSClient(BaseSMSProvider):
             420: InvalidRequestError,
         }
         msg = data.get("msg") or data.get("message") or "AlphaSMS error"
-        error_message = f"AlphaSMS error ({error_code}): {msg}"
-        logger.error("AlphaSMS API returned error: %s", error_message)
+        error_message = f'AlphaSMS error ({error_code}): [details withheld]'
+        logger.error('provider=AlphaSMS operation=inspect_response_data event=error')
         raise error_types.get(error_code, ProviderError)(
             error_message,
             status_code=error_code,
@@ -147,26 +147,26 @@ class AlphaSMSClient(BaseSMSProvider):
         if self.sender_id:
             payload["sender_id"] = self.sender_id
 
-        masked = mask_sensitive(payload)
-        logger.debug("AlphaSMS request to %s | payload: %s", self.base_url, masked)
+
+        logger.debug('provider=AlphaSMS operation=send_sms event=request')
 
         try:
             with secure_http_client(self.base_url, self.timeout, self.allow_insecure_http) as client:
                 response = client.post(self.base_url, data=payload)
-                logger.debug("AlphaSMS HTTP status: %d", response.status_code)
+                logger.debug('provider=AlphaSMS operation=send_sms event=response status=%d', response.status_code)
                 response.raise_for_status()
                 data = response.json()
                 return self._inspect_response_data(data, response)
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(
-                f"AlphaSMS request timed out: {exc}",
+                'AlphaSMS request timed out: [details withheld]',
                 provider="AlphaSMS",
-            ) from exc
+            ) from None
         except httpx.HTTPStatusError as exc:
             self._handle_http_status_error(exc)
             raise
         except httpx.RequestError as exc:
             raise ProviderConnectionError(
-                f"Failed to connect to AlphaSMS: {exc}",
+                'Failed to connect to AlphaSMS: [details withheld]',
                 provider="AlphaSMS",
-            ) from exc
+            ) from None

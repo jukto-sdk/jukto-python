@@ -19,7 +19,7 @@ from jukto.exceptions import (
     ResourceNotFoundError,
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
-from jukto.logger import logger, mask_sensitive
+from jukto.logger import logger
 
 
 class PathaoClient(BaseLogisticsProvider):
@@ -79,8 +79,8 @@ class PathaoClient(BaseLogisticsProvider):
             body = exc.response.text
             message = body.strip() or exc.response.reason_phrase
 
-        error_message = f"Pathao API error ({status_code}): {message}"
-        logger.error("Pathao HTTP error [%d]: %s", status_code, message)
+        error_message = f'Pathao API error ({status_code}): [details withheld]'
+        logger.error('provider=Pathao operation=handle_http_status_error event=error status=%d', status_code)
 
         if status_code in (401, 403):
             raise ProviderAuthenticationError(
@@ -88,42 +88,42 @@ class PathaoClient(BaseLogisticsProvider):
                 status_code=status_code,
                 response_body=body,
                 provider="Pathao",
-            ) from exc
+            ) from None
         elif status_code == 404:
             raise ResourceNotFoundError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="Pathao",
-            ) from exc
+            ) from None
         elif status_code in (400, 422):
             raise InvalidRequestError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="Pathao",
-            ) from exc
+            ) from None
         elif status_code == 429:
             raise ProviderRateLimitError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="Pathao",
-            ) from exc
+            ) from None
         elif status_code >= 500:
             raise ProviderServerError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="Pathao",
-            ) from exc
+            ) from None
         else:
             raise ProviderError(
                 error_message,
                 status_code=status_code,
                 response_body=body,
                 provider="Pathao",
-            ) from exc
+            ) from None
 
     def _issue_token(self) -> str:
         """Authenticate with Pathao and obtain OAuth2 tokens."""
@@ -135,7 +135,7 @@ class PathaoClient(BaseLogisticsProvider):
             "password": self.password,
             "grant_type": "password",
         }
-        logger.debug("Issuing new Pathao OAuth2 token for user: %s", self.username)
+        logger.debug('provider=Pathao operation=issue_token event=auth')
 
         try:
             with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
@@ -150,7 +150,7 @@ class PathaoClient(BaseLogisticsProvider):
                 self.refresh_token = data.get("refresh_token")
                 expires_in = data.get("expires_in", 3600)
                 self.token_expiry = time.time() + float(expires_in)
-                logger.debug("Successfully acquired Pathao access token (expires in %ds)", expires_in)
+                logger.debug('provider=Pathao operation=issue_token event=auth')
                 if not self.access_token:
                     raise ProviderAuthenticationError(
                         "Pathao returned success but no access_token found in payload",
@@ -160,17 +160,17 @@ class PathaoClient(BaseLogisticsProvider):
                 return self.access_token
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(
-                f"Pathao token request timed out: {exc}",
+                'Pathao token request timed out: [details withheld]',
                 provider="Pathao",
-            ) from exc
+            ) from None
         except httpx.HTTPStatusError as exc:
             self._handle_http_status_error(exc)
             raise
         except httpx.RequestError as exc:
             raise ProviderConnectionError(
-                f"Failed to connect to Pathao auth server: {exc}",
+                'Failed to connect to Pathao auth server: [details withheld]',
                 provider="Pathao",
-            ) from exc
+            ) from None
 
     def _refresh_access_token(self) -> str:
         """Refresh an expired OAuth2 access token."""
@@ -184,7 +184,7 @@ class PathaoClient(BaseLogisticsProvider):
             "refresh_token": self.refresh_token,
             "grant_type": "refresh_token",
         }
-        logger.debug("Refreshing Pathao OAuth2 access token")
+        logger.debug('provider=Pathao operation=refresh_access_token event=auth')
 
         try:
             with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
@@ -199,12 +199,12 @@ class PathaoClient(BaseLogisticsProvider):
                 self.refresh_token = data.get("refresh_token", self.refresh_token)
                 expires_in = data.get("expires_in", 3600)
                 self.token_expiry = time.time() + float(expires_in)
-                logger.debug("Pathao token successfully refreshed")
+                logger.debug('provider=Pathao operation=refresh_access_token event=auth')
                 if not self.access_token:
                     return self._issue_token()
                 return self.access_token
         except Exception as exc:
-            logger.warning("Pathao token refresh failed (%s). Re-issuing token.", exc)
+            logger.warning('provider=Pathao operation=refresh_access_token event=error')
             return self._issue_token()
 
     def get_token(self) -> str:
@@ -231,8 +231,8 @@ class PathaoClient(BaseLogisticsProvider):
         if "headers" in kwargs:
             headers.update(kwargs.pop("headers"))
 
-        masked_json = mask_sensitive(kwargs.get("json")) if "json" in kwargs else None
-        logger.debug("Pathao request: %s %s | payload: %s", method, endpoint, masked_json)
+
+        logger.debug('provider=Pathao operation=request event=request')
 
         try:
             with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
@@ -242,18 +242,18 @@ class PathaoClient(BaseLogisticsProvider):
                     headers=headers,
                     **kwargs,
                 )
-                logger.debug("Pathao response [%d]: %s", response.status_code, response.text[:200])
+                logger.debug('provider=Pathao operation=request event=response status=%d', response.status_code)
                 response.raise_for_status()
                 return response.json()
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(
-                f"Pathao request timed out: {exc}",
+                'Pathao request timed out: [details withheld]',
                 provider="Pathao",
-            ) from exc
+            ) from None
         except httpx.HTTPStatusError as exc:
             # If token expired unexpectedly, try refreshing once
             if exc.response.status_code == 401 and self.refresh_token:
-                logger.info("Pathao received 401, retrying with refreshed token")
+                logger.info('provider=Pathao operation=request event=auth')
                 self.token_expiry = 0.0
                 token = self._refresh_access_token()
                 headers["Authorization"] = f"Bearer {token}"
@@ -273,9 +273,9 @@ class PathaoClient(BaseLogisticsProvider):
             raise
         except httpx.RequestError as exc:
             raise ProviderConnectionError(
-                f"Failed to connect to Pathao: {exc}",
+                'Failed to connect to Pathao: [details withheld]',
                 provider="Pathao",
-            ) from exc
+            ) from None
 
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
         store_id = parcel.store_id or self.store_id
