@@ -8,7 +8,7 @@ from threading import RLock
 from typing import Any, Optional
 import httpx
 from jukto._responses import decode_json, error_body, require_object, unexpected
-from jukto._transport import secure_http_client, validate_endpoint
+from jukto._transport import validate_endpoint
 
 from jukto.exceptions import (
     InvalidRequestError,
@@ -43,9 +43,11 @@ class PathaoClient(BaseLogisticsProvider):
         store_id: Optional[int] = None,
         base_url: Optional[str] = None,
         sandbox: bool = False,
-        timeout: float = 30.0,
+        timeout: float | httpx.Timeout = 30.0,
         *,
         allow_insecure_http: bool = False,
+        http_client: Optional[httpx.Client] = None,
+        limits: Optional[httpx.Limits] = None,
         retry_unauthorized_orders: bool = False,
     ) -> None:
         self.client_id = client_id
@@ -62,6 +64,8 @@ class PathaoClient(BaseLogisticsProvider):
             base_url=resolved_url,
             timeout=timeout,
             allow_insecure_http=allow_insecure_http,
+            http_client=http_client,
+            limits=limits,
         )
 
         self.access_token: Optional[str] = None
@@ -133,32 +137,31 @@ class PathaoClient(BaseLogisticsProvider):
         started = time.monotonic()
         logger.debug('provider=Pathao operation=exchange_token event=auth')
         try:
-            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                response = client.post(endpoint, json=payload,
-                    headers={"Accept": "application/json", "Content-Type": "application/json"})
-                # RFC 6749 section 5.2: only this explicit rejection permits fallback.
-                body = error_body(response) if response.status_code == 400 else None
-                if refresh and isinstance(body, dict) and body.get("error") == "invalid_grant":
-                    return self._exchange_token(False)
-                response.raise_for_status()
-                data = require_object(decode_json(response, "Pathao"), response, "Pathao")
-                access = data.get("access_token")
-                rotation = data.get("refresh_token", self.refresh_token if refresh else None)
-                expiry = data.get("expires_in")
-                try:
-                    ttl = float(expiry)
-                except (ValueError, TypeError, OverflowError):
-                    raise unexpected(response, "Pathao", data) from None
-                if (not isinstance(access, str) or not access.strip()
-                    or (rotation is not None and (not isinstance(rotation, str) or not rotation.strip()))
-                    or ("refresh_token" in data and rotation is None)
-                    or isinstance(expiry, bool) or not math.isfinite(ttl) or ttl <= 0
-                    or not math.isfinite(started + ttl)):
-                    raise unexpected(response, "Pathao", data)
-                self.access_token, self.refresh_token, self.token_expiry = access, rotation, started + ttl
-                self._refresh_margin = min(60.0, ttl * 0.1)
-                self._token_generation += 1
-                return access
+            response = self._transport.request("POST", endpoint, json=payload,
+                headers={"Accept": "application/json", "Content-Type": "application/json"})
+            # RFC 6749 section 5.2: only this explicit rejection permits fallback.
+            body = error_body(response) if response.status_code == 400 else None
+            if refresh and isinstance(body, dict) and body.get("error") == "invalid_grant":
+                return self._exchange_token(False)
+            response.raise_for_status()
+            data = require_object(decode_json(response, "Pathao"), response, "Pathao")
+            access = data.get("access_token")
+            rotation = data.get("refresh_token", self.refresh_token if refresh else None)
+            expiry = data.get("expires_in")
+            try:
+                ttl = float(expiry)
+            except (ValueError, TypeError, OverflowError):
+                raise unexpected(response, "Pathao", data) from None
+            if (not isinstance(access, str) or not access.strip()
+                or (rotation is not None and (not isinstance(rotation, str) or not rotation.strip()))
+                or ("refresh_token" in data and rotation is None)
+                or isinstance(expiry, bool) or not math.isfinite(ttl) or ttl <= 0
+                or not math.isfinite(started + ttl)):
+                raise unexpected(response, "Pathao", data)
+            self.access_token, self.refresh_token, self.token_expiry = access, rotation, started + ttl
+            self._refresh_margin = min(60.0, ttl * 0.1)
+            self._token_generation += 1
+            return access
         except httpx.TimeoutException:
             raise ProviderTimeoutError('Pathao token request timed out: [details withheld]', provider="Pathao") from None
         except httpx.HTTPStatusError as exc:
@@ -176,6 +179,7 @@ class PathaoClient(BaseLogisticsProvider):
             return self._exchange_token(bool(self.refresh_token))
 
     def _get_token_snapshot(self, rejected_generation: Optional[int] = None) -> tuple[str, int]:
+        self._transport.ensure_open()
         # Recheck after acquiring the lock. A stale 401 cannot invalidate a newer token.
         with self._token_lock:
             rejected = rejected_generation == self._token_generation
@@ -219,11 +223,10 @@ class PathaoClient(BaseLogisticsProvider):
             headers["Authorization"] = f"Bearer {token}"
             logger.debug('provider=Pathao operation=request event=request')
             try:
-                with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                    response = client.request(method=method, url=endpoint, headers=headers, **kwargs)
-                    logger.debug('provider=Pathao operation=request event=response status=%d', response.status_code)
-                    response.raise_for_status()
-                    return self._inspect_response(response, endpoint)
+                response = self._transport.request(method=method, url=endpoint, headers=headers, **kwargs)
+                logger.debug('provider=Pathao operation=request event=response status=%d', response.status_code)
+                response.raise_for_status()
+                return self._inspect_response(response, endpoint)
             except httpx.TimeoutException:
                 raise ProviderTimeoutError('Pathao request timed out: [details withheld]', provider="Pathao") from None
             except httpx.HTTPStatusError as exc:

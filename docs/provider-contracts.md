@@ -335,3 +335,73 @@ and local validation is explicitly SDK policy. Exact provider phone formats, len
 amount precision/currency, and maximum quantity/weight remain unresolved across
 these providers. No regex, region defaults, minimum monetary value, or undocumented
 vendor limits were added. All checks were offline; no shipments were created.
+
+## HTTP client ownership and lifecycle (task 7, 2026-10-10)
+
+All six synchronous providers now share one transport implementation. It validates
+actual target URLs, creates an owned httpx.Client lazily on the first valid operation,
+and reuses it until close(). Provider-specific response inspection and exceptions
+remain in the adapters. Pathao token exchange and resource replay use the same pool.
+First-use initialization is synchronized; parallel requests are not serialized by
+the initialization lock. Connection reuse follows [HTTPX's client model](https://www.python-httpx.org/advanced/clients/);
+offline tests prove client reuse, not a measured network performance improvement.
+
+Use a context manager or call close() when the application finishes with a provider:
+
+```python
+import httpx
+from jukto import AlphaSMSClient
+
+with AlphaSMSClient(
+    api_key="example-key",
+    timeout=httpx.Timeout(20, connect=5, read=15, write=10, pool=3),
+    limits=httpx.Limits(max_connections=20, max_keepalive_connections=10,
+                        keepalive_expiry=15),
+) as sms:
+    # Existing send_sms calls use this provider's single pool.
+    pass
+```
+
+The constructor's existing scalar timeout remains supported; httpx.Timeout exposes
+connect/read/write/pool settings. limits accepts [httpx.Limits](https://www.python-httpx.org/advanced/resource-limits/)
+for owned pools, with HTTPX defaults when omitted. These settings are captured at
+construction. Configure a new provider rather than mutating its timeout attribute.
+Owned clients retain certificate verification and refuse redirects. There are no
+SDK transport retries; Pathao's operation-specific, bounded 401 replay is unchanged.
+
+For injection, pass keyword-only http_client to any provider:
+
+```python
+with httpx.Client() as application_client:
+    with AlphaSMSClient("example-key", http_client=application_client) as sms:
+        pass
+    # application_client is still open here; its owner closes it.
+```
+
+Injected clients are **borrowed**. Provider close/context exit marks the provider
+closed without closing that HTTPX client. Borrowed pool configuration belongs to
+its owner: combining http_client with provider limits raises JuktoConfigurationError.
+The SDK timeout (including the default 30 seconds) overrides the borrowed request
+timeout. Redirects are explicitly disabled per request and client-level HTTPX auth
+is disabled so it cannot replace provider authentication. A separately closed
+borrowed client is rejected on use. Invalid injection types are configuration errors.
+
+The application controls an injected client's TLS verification, proxies, custom
+transport retries, event hooks, default headers/params, and cookies; Jukto cannot
+certify those settings. Use a dedicated provider client configured for verified TLS
+and no automatic retries of side-effecting requests. HTTPX merges client defaults
+into requests and retains cookies, including in owned pools. Do not share a borrowed
+client carrying unrelated credentials or tenant state across providers. Hooks and
+custom logging also remain application-controlled.
+
+close() is idempotent. Closing an unused owned provider does not create a pool.
+Closed providers cannot be reused or re-entered; construct a new instance. Context
+exit also closes owned resources when application code raises. Finish all in-flight
+operations before close(); concurrent shutdown/request use is unsupported. Create
+clients inside each worker process; do not fork or persist a live pool. These APIs
+are synchronous and block the calling thread; native async remains task 11.
+
+Migration: previously every operation closed its temporary pool automatically.
+Long-lived application integrations now need explicit provider shutdown or context
+management. Existing operation signatures and provider response shapes are unchanged.
+No live requests were used to test transport ownership or pooling.

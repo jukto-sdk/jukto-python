@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional
 import httpx
 from jukto._responses import decode_json, error_body, require_object, unexpected
-from jukto._transport import secure_http_client, validate_endpoint
+from jukto._transport import validate_endpoint
 
 from jukto.exceptions import (
     InvalidRequestError,
@@ -30,9 +30,11 @@ class SteadfastClient(BaseLogisticsProvider):
         api_key: str,
         secret_key: str,
         base_url: Optional[str] = None,
-        timeout: float = 30.0,
+        timeout: float | httpx.Timeout = 30.0,
         *,
         allow_insecure_http: bool = False,
+        http_client: Optional[httpx.Client] = None,
+        limits: Optional[httpx.Limits] = None,
     ) -> None:
         super().__init__(
             api_key=api_key,
@@ -40,6 +42,8 @@ class SteadfastClient(BaseLogisticsProvider):
             base_url=base_url or self.DEFAULT_URL,
             timeout=timeout,
             allow_insecure_http=allow_insecure_http,
+            http_client=http_client,
+            limits=limits,
         )
         self.headers = {
             "Api-Key": self.api_key,
@@ -150,27 +154,26 @@ class SteadfastClient(BaseLogisticsProvider):
         logger.debug('provider=Steadfast operation=request event=request')
 
         try:
-            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                response = client.request(
-                    method=method,
-                    url=endpoint,
-                    headers=self.headers,
-                    **kwargs,
-                )
-                logger.debug('provider=Steadfast operation=request event=response status=%d', response.status_code)
-                response.raise_for_status()
-                data = require_object(decode_json(response, "Steadfast"), response, "Steadfast")
-                self._handle_inline_errors(data)
-                content = data.get("consignment") if method == "POST" else data.get("delivery_status")
-                content_type = dict if method == "POST" else str
-                valid = (
-                    type(data.get("status")) is int and data["status"] == 200
-                    and isinstance(content, content_type) and bool(content)
-                    and (method != "POST" or bool(content.get("consignment_id")))
-                )
-                if not valid:
-                    raise unexpected(response, "Steadfast", data)
-                return data
+            response = self._transport.request(
+                method=method,
+                url=endpoint,
+                headers=self.headers,
+                **kwargs,
+            )
+            logger.debug('provider=Steadfast operation=request event=response status=%d', response.status_code)
+            response.raise_for_status()
+            data = require_object(decode_json(response, "Steadfast"), response, "Steadfast")
+            self._handle_inline_errors(data)
+            content = data.get("consignment") if method == "POST" else data.get("delivery_status")
+            content_type = dict if method == "POST" else str
+            valid = (
+                type(data.get("status")) is int and data["status"] == 200
+                and isinstance(content, content_type) and bool(content)
+                and (method != "POST" or bool(content.get("consignment_id")))
+            )
+            if not valid:
+                raise unexpected(response, "Steadfast", data)
+            return data
         except httpx.TimeoutException as exc:
             logger.error('provider=Steadfast operation=request event=error')
             raise ProviderTimeoutError(

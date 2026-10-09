@@ -5,7 +5,6 @@ from json import JSONDecodeError
 import httpx
 from jukto._responses import unexpected
 from jukto.results import SMSBatchResult
-from jukto._transport import secure_http_client
 
 from jukto.exceptions import (
     InsufficientBalanceError,
@@ -32,9 +31,11 @@ class GreenWebClient(BaseSMSProvider):
         api_key: str,
         sender_id: Optional[str] = None,
         base_url: Optional[str] = None,
-        timeout: float = 30.0,
+        timeout: float | httpx.Timeout = 30.0,
         *,
         allow_insecure_http: bool = False,
+        http_client: Optional[httpx.Client] = None,
+        limits: Optional[httpx.Limits] = None,
     ) -> None:
         super().__init__(
             api_key=api_key,
@@ -42,6 +43,8 @@ class GreenWebClient(BaseSMSProvider):
             base_url=base_url or self.DEFAULT_URL,
             timeout=timeout,
             allow_insecure_http=allow_insecure_http,
+            http_client=http_client,
+            limits=limits,
         )
 
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
@@ -173,11 +176,10 @@ class GreenWebClient(BaseSMSProvider):
         logger.debug('provider=GreenWeb operation=send_sms event=request')
 
         try:
-            with secure_http_client(self.base_url, self.timeout, self.allow_insecure_http) as client:
-                response = client.post(self.base_url, data=payload)
-                logger.debug('provider=GreenWeb operation=send_sms event=response status=%d', response.status_code)
-                response.raise_for_status()
-                return self._inspect_response_content(response)
+            response = self._transport.request("POST", self.base_url, data=payload)
+            logger.debug('provider=GreenWeb operation=send_sms event=response status=%d', response.status_code)
+            response.raise_for_status()
+            return self._inspect_response_content(response)
         except httpx.TimeoutException as exc:
             logger.error('provider=GreenWeb operation=send_sms event=timeout')
             raise ProviderTimeoutError(

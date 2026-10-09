@@ -20,6 +20,8 @@ from jukto import (
 
 
 class TestSteadfastErrorHandling(unittest.TestCase):
+    def tearDown(self):
+        self.client.close()
     def setUp(self):
         self.client = SteadfastClient(api_key="test_key", secret_key="test_secret")
         self.sample_parcel = Parcel(
@@ -115,10 +117,12 @@ class TestSteadfastErrorHandling(unittest.TestCase):
 
 
 class TestGreenWebErrorHandling(unittest.TestCase):
+    def tearDown(self):
+        self.client.close()
     def setUp(self):
         self.client = GreenWebClient(api_key="test_greenweb_token")
 
-    @patch("httpx.Client.post")
+    @patch("httpx.Client.request")
     def test_invalid_token_text_response(self, mock_post):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 200
@@ -133,7 +137,7 @@ class TestGreenWebErrorHandling(unittest.TestCase):
 
         self.assertEqual(ctx.exception.provider, "GreenWeb")
 
-    @patch("httpx.Client.post")
+    @patch("httpx.Client.request")
     def test_insufficient_balance(self, mock_post):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 200
@@ -146,7 +150,7 @@ class TestGreenWebErrorHandling(unittest.TestCase):
         with self.assertRaises(InsufficientBalanceError):
             self.client.send_sms("01700000000", "Hello BD!")
 
-    @patch("httpx.Client.post")
+    @patch("httpx.Client.request")
     def test_http_status_error_500(self, mock_post):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 500

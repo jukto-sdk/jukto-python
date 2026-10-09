@@ -74,10 +74,15 @@ def test_mutated_base_url_is_rechecked_before_sending(factory, sample_parcel):
 
 
 def test_tls_and_redirect_settings_are_explicit():
-    from jukto._transport import secure_http_client
+    from jukto._transport import SyncTransport
     with patch('jukto._transport.httpx.Client') as transport:
-        secure_http_client('https://provider.test', 30, False)
-    transport.assert_called_once_with(timeout=30, verify=True, follow_redirects=False)
+        transport.return_value.is_closed = False
+        client = SyncTransport(timeout=30)
+        client.request('GET', 'https://provider.test')
+        client.close()
+    assert transport.call_count == 1
+    assert transport.call_args.kwargs == dict(timeout=httpx.Timeout(30), limits=client.limits,
+                                            verify=True, follow_redirects=False)
 
 
 @pytest.mark.parametrize('factory', FACTORIES)

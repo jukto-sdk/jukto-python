@@ -6,7 +6,7 @@ from typing import Any, Optional
 from decimal import Decimal
 import httpx
 from jukto._responses import decode_json, error_body, require_object, unexpected
-from jukto._transport import secure_http_client, validate_endpoint
+from jukto._transport import validate_endpoint
 
 from jukto.exceptions import (
     InvalidRequestError,
@@ -35,9 +35,11 @@ class RedXClient(BaseLogisticsProvider):
         api_key: str,
         base_url: Optional[str] = None,
         sandbox: bool = False,
-        timeout: float = 30.0,
+        timeout: float | httpx.Timeout = 30.0,
         *,
         allow_insecure_http: bool = False,
+        http_client: Optional[httpx.Client] = None,
+        limits: Optional[httpx.Limits] = None,
     ) -> None:
         resolved_url = base_url or (self.SANDBOX_URL if sandbox else self.PRODUCTION_URL)
         super().__init__(
@@ -46,6 +48,8 @@ class RedXClient(BaseLogisticsProvider):
             base_url=resolved_url,
             timeout=timeout,
             allow_insecure_http=allow_insecure_http,
+            http_client=http_client,
+            limits=limits,
         )
         self.headers = {
             "API-ACCESS-TOKEN": f"Bearer {self.api_key}",
@@ -151,25 +155,24 @@ class RedXClient(BaseLogisticsProvider):
         logger.debug('provider=RedX operation=request event=request')
 
         try:
-            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                response = client.request(
-                    method=method,
-                    url=endpoint,
-                    headers=self.headers,
-                    **kwargs,
-                )
-                logger.debug('provider=RedX operation=request event=response status=%d', response.status_code)
-                response.raise_for_status()
-                data = require_object(decode_json(response, "RedX"), response, "RedX")
-                self._handle_inline_errors(data)
-                content = data.get("tracking_id") if method == "POST" else data.get("tracking")
-                if method == "POST":
-                    valid = isinstance(content, (str, int)) and not isinstance(content, bool) and bool(content)
-                else:
-                    valid = isinstance(content, dict) and isinstance(content.get("status"), str) and bool(content["status"])
-                if not valid:
-                    raise unexpected(response, "RedX", data)
-                return data
+            response = self._transport.request(
+                method=method,
+                url=endpoint,
+                headers=self.headers,
+                **kwargs,
+            )
+            logger.debug('provider=RedX operation=request event=response status=%d', response.status_code)
+            response.raise_for_status()
+            data = require_object(decode_json(response, "RedX"), response, "RedX")
+            self._handle_inline_errors(data)
+            content = data.get("tracking_id") if method == "POST" else data.get("tracking")
+            if method == "POST":
+                valid = isinstance(content, (str, int)) and not isinstance(content, bool) and bool(content)
+            else:
+                valid = isinstance(content, dict) and isinstance(content.get("status"), str) and bool(content["status"])
+            if not valid:
+                raise unexpected(response, "RedX", data)
+            return data
         except httpx.TimeoutException as exc:
             logger.error('provider=RedX operation=request event=timeout')
             raise ProviderTimeoutError(

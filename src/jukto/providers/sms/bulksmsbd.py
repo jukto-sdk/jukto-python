@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any, Optional
 import httpx
 from jukto._responses import decode_json, unexpected
-from jukto._transport import secure_http_client
 
 from jukto.exceptions import (
     InvalidRequestError,
@@ -30,9 +29,11 @@ class BulkSMSBDClient(BaseSMSProvider):
         api_key: str,
         sender_id: str,
         base_url: Optional[str] = None,
-        timeout: float = 30.0,
+        timeout: float | httpx.Timeout = 30.0,
         *,
         allow_insecure_http: bool = False,
+        http_client: Optional[httpx.Client] = None,
+        limits: Optional[httpx.Limits] = None,
     ) -> None:
         super().__init__(
             api_key=api_key,
@@ -40,6 +41,8 @@ class BulkSMSBDClient(BaseSMSProvider):
             base_url=base_url or self.DEFAULT_URL,
             timeout=timeout,
             allow_insecure_http=allow_insecure_http,
+            http_client=http_client,
+            limits=limits,
         )
 
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
@@ -124,12 +127,11 @@ class BulkSMSBDClient(BaseSMSProvider):
         logger.debug('provider=BulkSMSBD operation=send_sms event=request')
 
         try:
-            with secure_http_client(self.base_url, self.timeout, self.allow_insecure_http) as client:
-                response = client.post(self.base_url, data=payload)
-                logger.debug('provider=BulkSMSBD operation=send_sms event=response status=%d', response.status_code)
-                response.raise_for_status()
-                data = decode_json(response, "BulkSMSBD")
-                return self._inspect_response_data(data, response)
+            response = self._transport.request("POST", self.base_url, data=payload)
+            logger.debug('provider=BulkSMSBD operation=send_sms event=response status=%d', response.status_code)
+            response.raise_for_status()
+            data = decode_json(response, "BulkSMSBD")
+            return self._inspect_response_data(data, response)
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError(
                 'BulkSMSBD request timed out: [details withheld]',

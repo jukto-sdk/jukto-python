@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from jukto._transport import validate_endpoint
+import httpx
+from jukto._transport import validate_endpoint, SyncTransport, TransportLifecycle
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -30,7 +31,7 @@ class Parcel:
     redx_pickup_store_id: Optional[int] = None
 
 
-class BaseLogisticsProvider(ABC):
+class BaseLogisticsProvider(TransportLifecycle, ABC):
     """The Contract: All logistics providers MUST implement these methods."""
 
     def __init__(
@@ -38,9 +39,11 @@ class BaseLogisticsProvider(ABC):
         api_key: str,
         secret_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        timeout: float = 30.0,
+        timeout: float | httpx.Timeout = 30.0,
         *,
         allow_insecure_http: bool = False,
+        http_client: Optional[httpx.Client] = None,
+        limits: Optional[httpx.Limits] = None,
     ) -> None:
         if base_url is not None:
             validate_endpoint(base_url, allow_insecure_http)
@@ -49,6 +52,8 @@ class BaseLogisticsProvider(ABC):
         self.secret_key = secret_key
         self.base_url = base_url
         self.timeout = timeout
+        self._transport = SyncTransport(timeout=timeout, limits=limits, http_client=http_client,
+                                        allow_insecure_http=allow_insecure_http)
 
     @abstractmethod
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
