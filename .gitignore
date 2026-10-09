@@ -11,3 +11,5 @@ build/
 .coverage
 htmlcov/
 .pytest_cache/
+site/
+LAUNCH_PLAYBOOK.md
