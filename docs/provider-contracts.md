@@ -211,3 +211,46 @@ except UnexpectedProviderResponseError:
     # Submission outcome is unknown. Do not automatically resend.
     pass
 ```
+
+## Pathao token lifecycle and replay (task 5, 2026-10-10)
+
+Token exchange and publication are serialized by a per-client reentrant lock.
+Waiters recheck expiry under that lock; concurrent late 401 responses reuse a newer
+cache generation rather than invalidating it. The cache and lock belong to one
+client instance in one process: workers, other instances, and forked processes do
+not coordinate. Construct clients inside each worker. Do not mutate token cache
+attributes from application threads or persist `token_expiry`.
+
+`token_expiry` is now a **monotonic deadline**, not a Unix timestamp. Lifetime starts
+before the exchange request, subtracting network latency conservatively. The refresh
+margin is min(60 seconds, 10% of lifetime), allowing short-lived tokens to be reused.
+A nonblank access token and finite positive `expires_in` are required; no undocumented
+3600-second default is supplied. A supplied refresh token must be a nonblank string;
+omission preserves the previous refresh token during refresh and clears it during
+password issuance. All fields are validated before publishing the new cache state.
+Malformed responses and transport failures leave the prior state untouched.
+
+Only HTTP 400 with JSON `error: "invalid_grant"` during a refresh grant triggers one
+password-grant fallback. This classification follows [RFC 6749 sections 5.2 and 6](https://www.rfc-editor.org/rfc/rfc6749#section-5.2),
+which defines rejection of an invalid/expired/revoked refresh token, and permits
+omission or rotation of the refresh token on successful refresh. Pathao's exact
+adoption of this error envelope, expiry schema, and omission behavior remains
+**unverified**: its [developer portal](https://developer.pathao.com/) could not be
+retrieved in this audit. These are conservative SDK policies grounded in OAuth,
+not Pathao certification. Generic 400/401/403, 429/500, timeout, network, and malformed
+refresh responses propagate; they never silently switch to password authentication.
+
+GET operations replay at most once after HTTP 401, refreshing or issuing a token.
+The final attempt's HTTP/timeout/network/schema error is propagated with its own
+response data. No retries occur for timeouts, network failures, 5xx, or validation
+errors. Shipment creation no longer automatically replays: callers receive the 401.
+For integrations with independently verified guarantees that a 401 shipment request
+has no side effects, `PathaoClient(..., retry_unauthorized_orders=True)` restores the
+legacy single replay. This option is an explicit application assumption; Pathao's
+no-side-effect-on-401 and shipment idempotency guarantees remain unresolved. An
+order reference is not evidence of idempotency. Reconcile uncertain outcomes before
+application retries. No live shipment or credentialed authentication was performed.
+
+Offline lifecycle regressions cover final retry failures, transient refresh outages,
+malformed token state, rotation, short lifetimes, clock jumps, concurrent expiry,
+concurrent stale 401, and default refusal to replay shipment creation.

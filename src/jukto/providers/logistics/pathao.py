@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 import math
+from threading import RLock
 from typing import Any, Optional
 import httpx
 from jukto._responses import decode_json, error_body, require_object, unexpected
@@ -19,7 +20,6 @@ from jukto.exceptions import (
     ProviderServerError,
     ProviderTimeoutError,
     ResourceNotFoundError,
-    UnexpectedProviderResponseError,
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.logger import logger
@@ -46,6 +46,7 @@ class PathaoClient(BaseLogisticsProvider):
         timeout: float = 30.0,
         *,
         allow_insecure_http: bool = False,
+        retry_unauthorized_orders: bool = False,
     ) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
@@ -66,6 +67,10 @@ class PathaoClient(BaseLogisticsProvider):
         self.access_token: Optional[str] = None
         self.refresh_token: Optional[str] = None
         self.token_expiry: float = 0.0
+        self.retry_unauthorized_orders = retry_unauthorized_orders
+        self._token_lock = RLock()
+        self._token_generation = 0
+        self._refresh_margin = 60.0
 
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
         status_code = exc.response.status_code
@@ -117,108 +122,71 @@ class PathaoClient(BaseLogisticsProvider):
                 provider="Pathao",
             ) from None
 
-    def _issue_token(self) -> str:
-        """Authenticate with Pathao and obtain OAuth2 tokens."""
+    def _exchange_token(self, refresh: bool) -> str:
+        """Called under the token lock; publish only a fully validated response."""
         endpoint = f"{self.base_url}/aladdin/api/v1/issue-token"
-        payload = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "username": self.username,
-            "password": self.password,
-            "grant_type": "password",
-        }
-        logger.debug('provider=Pathao operation=issue_token event=auth')
-
+        payload = {"client_id": self.client_id, "client_secret": self.client_secret}
+        if refresh:
+            payload.update(grant_type="refresh_token", refresh_token=self.refresh_token)
+        else:
+            payload.update(grant_type="password", username=self.username, password=self.password)
+        started = time.monotonic()
+        logger.debug('provider=Pathao operation=exchange_token event=auth')
         try:
             with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                response = client.post(
-                    endpoint,
-                    json=payload,
-                    headers={"Accept": "application/json", "Content-Type": "application/json"},
-                )
+                response = client.post(endpoint, json=payload,
+                    headers={"Accept": "application/json", "Content-Type": "application/json"})
+                # RFC 6749 section 5.2: only this explicit rejection permits fallback.
+                body = error_body(response) if response.status_code == 400 else None
+                if refresh and isinstance(body, dict) and body.get("error") == "invalid_grant":
+                    return self._exchange_token(False)
                 response.raise_for_status()
                 data = require_object(decode_json(response, "Pathao"), response, "Pathao")
-                if not isinstance(data.get("access_token"), str) or not data["access_token"]:
-                    raise unexpected(response, "Pathao", data)
-                self.access_token = data.get("access_token")
-                self.refresh_token = data.get("refresh_token")
-                expires_in = data.get("expires_in", 3600)
+                access = data.get("access_token")
+                rotation = data.get("refresh_token", self.refresh_token if refresh else None)
+                expiry = data.get("expires_in")
                 try:
-                    ttl = float(expires_in)
+                    ttl = float(expiry)
                 except (ValueError, TypeError, OverflowError):
                     raise unexpected(response, "Pathao", data) from None
-                if isinstance(expires_in, bool) or not math.isfinite(ttl) or ttl <= 0:
+                if (not isinstance(access, str) or not access.strip()
+                    or (rotation is not None and (not isinstance(rotation, str) or not rotation.strip()))
+                    or ("refresh_token" in data and rotation is None)
+                    or isinstance(expiry, bool) or not math.isfinite(ttl) or ttl <= 0
+                    or not math.isfinite(started + ttl)):
                     raise unexpected(response, "Pathao", data)
-                self.token_expiry = time.time() + ttl
-                logger.debug('provider=Pathao operation=issue_token event=auth')
-                return self.access_token
-        except httpx.TimeoutException as exc:
-            raise ProviderTimeoutError(
-                'Pathao token request timed out: [details withheld]',
-                provider="Pathao",
-            ) from None
+                self.access_token, self.refresh_token, self.token_expiry = access, rotation, started + ttl
+                self._refresh_margin = min(60.0, ttl * 0.1)
+                self._token_generation += 1
+                return access
+        except httpx.TimeoutException:
+            raise ProviderTimeoutError('Pathao token request timed out: [details withheld]', provider="Pathao") from None
         except httpx.HTTPStatusError as exc:
             self._handle_http_status_error(exc)
             raise
-        except httpx.RequestError as exc:
-            raise ProviderConnectionError(
-                'Failed to connect to Pathao auth server: [details withheld]',
-                provider="Pathao",
-            ) from None
+        except httpx.RequestError:
+            raise ProviderConnectionError('Failed to connect to Pathao auth server: [details withheld]', provider="Pathao") from None
+
+    def _issue_token(self) -> str:
+        with self._token_lock:
+            return self._exchange_token(False)
 
     def _refresh_access_token(self) -> str:
-        """Refresh an expired OAuth2 access token."""
-        if not self.refresh_token:
-            return self._issue_token()
+        with self._token_lock:
+            return self._exchange_token(bool(self.refresh_token))
 
-        endpoint = f"{self.base_url}/aladdin/api/v1/issue-token"
-        payload = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "refresh_token": self.refresh_token,
-            "grant_type": "refresh_token",
-        }
-        logger.debug('provider=Pathao operation=refresh_access_token event=auth')
-
-        try:
-            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                response = client.post(
-                    endpoint,
-                    json=payload,
-                    headers={"Accept": "application/json", "Content-Type": "application/json"},
-                )
-                response.raise_for_status()
-                data = require_object(decode_json(response, "Pathao"), response, "Pathao")
-                if not isinstance(data.get("access_token"), str) or not data["access_token"]:
-                    raise unexpected(response, "Pathao", data)
-                self.access_token = data.get("access_token")
-                self.refresh_token = data.get("refresh_token", self.refresh_token)
-                expires_in = data.get("expires_in", 3600)
-                try:
-                    ttl = float(expires_in)
-                except (ValueError, TypeError, OverflowError):
-                    raise unexpected(response, "Pathao", data) from None
-                if isinstance(expires_in, bool) or not math.isfinite(ttl) or ttl <= 0:
-                    raise unexpected(response, "Pathao", data)
-                self.token_expiry = time.time() + ttl
-                logger.debug('provider=Pathao operation=refresh_access_token event=auth')
-                return self.access_token
-        except UnexpectedProviderResponseError:
-            raise
-        except (httpx.RequestError, httpx.HTTPStatusError, ProviderError):
-            logger.warning('provider=Pathao operation=refresh_access_token event=error')
-            return self._issue_token()
+    def _get_token_snapshot(self, rejected_generation: Optional[int] = None) -> tuple[str, int]:
+        # Recheck after acquiring the lock. A stale 401 cannot invalidate a newer token.
+        with self._token_lock:
+            rejected = rejected_generation == self._token_generation
+            if self.access_token and not rejected and time.monotonic() < self.token_expiry - self._refresh_margin:
+                return self.access_token, self._token_generation
+            token = self._exchange_token(bool(self.refresh_token))
+            return token, self._token_generation
 
     def get_token(self) -> str:
-        """Returns a valid access token, issuing or refreshing as necessary."""
-        # Refresh 60 seconds before actual expiration
-        if self.access_token and time.time() < (self.token_expiry - 60):
-            return self.access_token
-
-        if self.refresh_token:
-            return self._refresh_access_token()
-
-        return self._issue_token()
+        """Return a token from this instance's process-local, synchronized cache."""
+        return self._get_token_snapshot()[0]
 
     def _inspect_response(self, response: httpx.Response, endpoint: str) -> dict[str, Any]:
         """Conservative legacy envelope guard; official application codes unresolved."""
@@ -240,63 +208,33 @@ class PathaoClient(BaseLogisticsProvider):
         return data
 
     def _request(self, method: str, endpoint: str, **kwargs: Any) -> dict[str, Any]:
-        """Execute an authenticated HTTP request to Pathao API."""
+        """Replay reads once on 401; shipment replay requires explicit opt-in."""
         validate_endpoint(endpoint, self.allow_insecure_http)
         kwargs["follow_redirects"] = False
-        token = self.get_token()
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-        if "headers" in kwargs:
-            headers.update(kwargs.pop("headers"))
-
-
-        logger.debug('provider=Pathao operation=request event=request')
-
-        try:
-            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                response = client.request(
-                    method=method,
-                    url=endpoint,
-                    headers=headers,
-                    **kwargs,
-                )
-                logger.debug('provider=Pathao operation=request event=response status=%d', response.status_code)
-                response.raise_for_status()
-                return self._inspect_response(response, endpoint)
-        except httpx.TimeoutException as exc:
-            raise ProviderTimeoutError(
-                'Pathao request timed out: [details withheld]',
-                provider="Pathao",
-            ) from None
-        except httpx.HTTPStatusError as exc:
-            # If token expired unexpectedly, try refreshing once
-            if exc.response.status_code == 401 and self.refresh_token:
-                logger.info('provider=Pathao operation=request event=auth')
-                self.token_expiry = 0.0
-                token = self._refresh_access_token()
-                headers["Authorization"] = f"Bearer {token}"
-                try:
-                    with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
-                        retry_resp = client.request(
-                            method=method,
-                            url=endpoint,
-                            headers=headers,
-                            **kwargs,
-                        )
-                        retry_resp.raise_for_status()
-                        return self._inspect_response(retry_resp, endpoint)
-                except (httpx.RequestError, httpx.HTTPStatusError):
-                    pass
-            self._handle_http_status_error(exc)
-            raise
-        except httpx.RequestError as exc:
-            raise ProviderConnectionError(
-                'Failed to connect to Pathao: [details withheld]',
-                provider="Pathao",
-            ) from None
+        token, generation = self._get_token_snapshot()
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        headers.update(kwargs.pop("headers", {}))
+        replay = method.upper() == "GET" or (method.upper() == "POST" and endpoint.endswith("/orders") and self.retry_unauthorized_orders)
+        for attempt in range(2):
+            headers["Authorization"] = f"Bearer {token}"
+            logger.debug('provider=Pathao operation=request event=request')
+            try:
+                with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
+                    response = client.request(method=method, url=endpoint, headers=headers, **kwargs)
+                    logger.debug('provider=Pathao operation=request event=response status=%d', response.status_code)
+                    response.raise_for_status()
+                    return self._inspect_response(response, endpoint)
+            except httpx.TimeoutException:
+                raise ProviderTimeoutError('Pathao request timed out: [details withheld]', provider="Pathao") from None
+            except httpx.HTTPStatusError as exc:
+                if attempt == 0 and replay and exc.response.status_code == 401:
+                    token, generation = self._get_token_snapshot(rejected_generation=generation)
+                    continue
+                self._handle_http_status_error(exc)
+                raise
+            except httpx.RequestError:
+                raise ProviderConnectionError('Failed to connect to Pathao: [details withheld]', provider="Pathao") from None
+        raise AssertionError("unreachable retry state")
 
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
         store_id = parcel.store_id or self.store_id

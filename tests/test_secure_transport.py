@@ -48,7 +48,7 @@ def test_redirect_does_not_forward_credentials(factory, sample_parcel):
     client = factory(base_url='https://provider.test/api')
     if isinstance(client, PathaoClient):
         client.access_token = 'secret-token'
-        client.token_expiry = time.time() + 3600
+        client.token_expiry = time.monotonic() + 3600
     initial = respx.route(host='provider.test').respond(307, headers={'Location': 'https://attacker.test/collect'})
     target = respx.route(host='attacker.test').respond(200, json={'error': 0})
     with pytest.raises(ProviderError):
@@ -94,7 +94,7 @@ def test_http_opt_in_allows_explicit_legacy_request(factory, sample_parcel):
     client = factory(base_url='http://local.test/api', allow_insecure_http=True)
     if isinstance(client, PathaoClient):
         client.access_token = 'offline-token'
-        client.token_expiry = time.time() + 3600
+        client.token_expiry = time.monotonic() + 3600
     # Deliberate transport-only simulation, not evidence of provider behavior.
     payload = {'error': 0, 'data': {'request_id': 123, 'consignment_id': '123'},
                'response_code': 202, 'status': 200, 'consignment': {'consignment_id': 123}, 'tracking_id': '123'}

@@ -20,7 +20,7 @@ def make_client(name):
     if name == 'Pathao':
         c = jukto.PathaoClient(SECRETS[0], SECRETS[0], SECRETS[-1], SECRETS[1], **options)
         c.access_token = SECRETS[2]
-        c.token_expiry = time.time() + 3600
+        c.token_expiry = time.monotonic() + 3600
         return c
     if name == 'Steadfast':
         return jukto.SteadfastClient(SECRETS[0], SECRETS[0], **options)
@@ -105,7 +105,7 @@ def test_pathao_token_issue_and_refresh_logs_are_private(caplog):
     c.access_token = None
     c.refresh_token = SECRETS[2]
     respx.route(host='provider.test').mock(side_effect=[
-        httpx.Response(401, json={'message': ECHO}),
+        httpx.Response(400, json={'error': 'invalid_grant', 'message': ECHO}),
         httpx.Response(200, json={'access_token': SECRETS[2], 'refresh_token': SECRETS[1], 'expires_in': 3600}),
     ])
     with caplog.at_level(logging.DEBUG, logger='jukto'):

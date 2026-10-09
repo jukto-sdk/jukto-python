@@ -16,7 +16,7 @@ def client_for(name):
     if name == 'Pathao':
         c = jukto.PathaoClient('id', 'secret', 'user', 'password', **kw)
         c.access_token = 'offline-token'
-        c.token_expiry = time.time() + 3600
+        c.token_expiry = time.monotonic() + 3600
         return c
     if name == 'BulkSMSBD':
         return jukto.BulkSMSBDClient('key', 'sender', **kw)
@@ -83,6 +83,7 @@ def test_pathao_bad_token_envelope_does_not_fallback(refresh, content):
 def test_pathao_retry_malformed_json_is_not_reported_as_authentication_failure():
     c = client_for('Pathao')
     c.refresh_token = 'refresh-token'
+    c.retry_unauthorized_orders = True
     respx.post('https://provider.test/aladdin/api/v1/issue-token').respond(200, json={'access_token': 'new', 'expires_in': 3600})
     respx.post('https://provider.test/aladdin/api/v1/orders').mock(side_effect=[httpx.Response(401), httpx.Response(200, text='{broken')])
     with pytest.raises(jukto.UnexpectedProviderResponseError):
@@ -157,6 +158,7 @@ def test_pathao_invalid_expiry_is_a_schema_failure(refresh, expiry):
 def test_pathao_programming_failure_is_not_hidden_by_fallback(phase):
     c = client_for('Pathao')
     c.refresh_token = 'refresh'
+    c.retry_unauthorized_orders = True
     if phase == 'refresh':
         c.access_token = None
         respx.route(host='provider.test').respond(200, json={})
@@ -164,7 +166,7 @@ def test_pathao_programming_failure_is_not_hidden_by_fallback(phase):
             with pytest.raises(TypeError, match='internal bug'):
                 c.get_token()
     else:
-        respx.post('https://provider.test/aladdin/api/v1/issue-token').respond(200, json={'access_token': 'new'})
+        respx.post('https://provider.test/aladdin/api/v1/issue-token').respond(200, json={'access_token': 'new', 'expires_in': 3600})
         respx.post('https://provider.test/aladdin/api/v1/orders').mock(side_effect=[httpx.Response(401), httpx.Response(200, json={})])
         with patch.object(c, '_inspect_response', side_effect=TypeError('internal bug')):
             with pytest.raises(TypeError, match='internal bug'):
