@@ -12,6 +12,7 @@ from jukto import (
     ProviderTimeoutError,
     ProviderConnectionError,
     ProviderRateLimitError,
+    ProviderError,
     JuktoValidationError,
 )
 
@@ -63,7 +64,6 @@ def test_pathao_token_issue_and_create_order(pathao_client: PathaoClient, sample
 
 @respx.mock
 def test_pathao_token_refresh(pathao_client: PathaoClient, sample_parcel: Parcel):
-    # Set simulated expired token
     pathao_client.access_token = "old_token"
     pathao_client.refresh_token = "valid_refresh_token"
     pathao_client.token_expiry = time.time() - 100  # expired
@@ -102,6 +102,67 @@ def test_pathao_auth_failure_on_token(pathao_client: PathaoClient):
         pathao_client.get_token()
 
 
+@respx.mock
+def test_pathao_missing_access_token_in_200(pathao_client: PathaoClient):
+    respx.post(f"{pathao_client.base_url}/aladdin/api/v1/issue-token").mock(
+        return_value=httpx.Response(200, json={"token_type": "Bearer"})
+    )
+    with pytest.raises(ProviderAuthenticationError):
+        pathao_client.get_token()
+
+
+@respx.mock
+def test_pathao_token_network_errors(pathao_client: PathaoClient):
+    # Network error on issue token
+    respx.post(f"{pathao_client.base_url}/aladdin/api/v1/issue-token").mock(
+        side_effect=httpx.NetworkError("Connect failed")
+    )
+    with pytest.raises(ProviderConnectionError):
+        pathao_client.get_token()
+        
+    respx.post(f"{pathao_client.base_url}/aladdin/api/v1/issue-token").mock(
+        side_effect=httpx.TimeoutException("Timeout")
+    )
+    with pytest.raises(ProviderTimeoutError):
+        pathao_client.get_token()
+
+
+@respx.mock
+def test_pathao_token_refresh_fallback(pathao_client: PathaoClient):
+    # Token refresh failure falls back to issuing token
+    pathao_client.access_token = "old_token"
+    pathao_client.refresh_token = "bad_refresh_token"
+    pathao_client.token_expiry = time.time() - 100
+
+    # First call is refresh, which fails with 400
+    # Second call is re-issuing token, which succeeds
+    respx.post(f"{pathao_client.base_url}/aladdin/api/v1/issue-token").mock(
+        side_effect=[
+            httpx.Response(400, json={"error": "invalid_grant"}),
+            httpx.Response(200, json={"access_token": "reissued_token", "expires_in": 3600}),
+        ]
+    )
+
+    token = pathao_client.get_token()
+    assert token == "reissued_token"
+    
+@respx.mock
+def test_pathao_token_refresh_fallback_missing_token(pathao_client: PathaoClient):
+    pathao_client.access_token = "old_token"
+    pathao_client.refresh_token = "valid_refresh_token"
+    pathao_client.token_expiry = time.time() - 100
+
+    respx.post(f"{pathao_client.base_url}/aladdin/api/v1/issue-token").mock(
+        side_effect=[
+            httpx.Response(200, json={"token_type": "Bearer"}), # Missing access_token
+            httpx.Response(200, json={"access_token": "reissued_token_2", "expires_in": 3600}),
+        ]
+    )
+
+    token = pathao_client.get_token()
+    assert token == "reissued_token_2"
+
+
 def test_pathao_missing_store_id(pathao_client: PathaoClient):
     pathao_client.store_id = None
     parcel_no_store = Parcel(
@@ -134,9 +195,23 @@ def test_pathao_get_stores(pathao_client: PathaoClient):
 
 
 @respx.mock
-def test_pathao_http_errors(pathao_client: PathaoClient, sample_parcel: Parcel):
+def test_pathao_http_errors_and_retries(pathao_client: PathaoClient, sample_parcel: Parcel):
     pathao_client.access_token = "mock_valid_token"
     pathao_client.token_expiry = time.time() + 3600
+
+    # 429 Rate Limit
+    respx.post(f"{pathao_client.base_url}/aladdin/api/v1/orders").mock(
+        return_value=httpx.Response(429, text="Rate limit")
+    )
+    with pytest.raises(ProviderRateLimitError):
+        pathao_client.create_order(sample_parcel)
+
+    # 418 Teapot
+    respx.post(f"{pathao_client.base_url}/aladdin/api/v1/orders").mock(
+        return_value=httpx.Response(418, text="Teapot")
+    )
+    with pytest.raises(ProviderError):
+        pathao_client.create_order(sample_parcel)
 
     # 422 Invalid Request
     respx.post(f"{pathao_client.base_url}/aladdin/api/v1/orders").mock(
@@ -165,3 +240,83 @@ def test_pathao_http_errors(pathao_client: PathaoClient, sample_parcel: Parcel):
     )
     with pytest.raises(ProviderTimeoutError):
         pathao_client.check_status("TIMEOUT")
+
+    # Network Error
+    respx.get(f"{pathao_client.base_url}/aladdin/api/v1/orders/NET_ERR/info").mock(
+        side_effect=httpx.NetworkError("Network failed")
+    )
+    with pytest.raises(ProviderConnectionError):
+        pathao_client.check_status("NET_ERR")
+
+
+@respx.mock
+def test_pathao_401_retry_success(pathao_client: PathaoClient, sample_parcel: Parcel):
+    # Test 401 retry logic where token refreshes and retry succeeds
+    pathao_client.access_token = "expired_access_token"
+    pathao_client.refresh_token = "valid_refresh_token"
+    pathao_client.token_expiry = time.time() + 3600
+
+    order_endpoint = f"{pathao_client.base_url}/aladdin/api/v1/orders"
+    refresh_endpoint = f"{pathao_client.base_url}/aladdin/api/v1/issue-token"
+
+    # Step 1: Initial order returns 401
+    # Step 2: Refresh token succeeds
+    # Step 3: Retried order succeeds
+    respx.post(order_endpoint).mock(
+        side_effect=[
+            httpx.Response(401, json={"message": "Unauthenticated"}),
+            httpx.Response(200, json={"type": "success", "data": {"consignment_id": "RETRY-OK"}}),
+        ]
+    )
+    respx.post(refresh_endpoint).mock(
+        return_value=httpx.Response(200, json={"access_token": "refreshed_tok", "expires_in": 3600})
+    )
+
+    resp = pathao_client.create_order(sample_parcel)
+    assert resp["data"]["consignment_id"] == "RETRY-OK"
+
+@respx.mock
+def test_pathao_401_retry_failure(pathao_client: PathaoClient, sample_parcel: Parcel):
+    # Test 401 retry logic where the retry also fails
+    pathao_client.access_token = "expired_access_token"
+    pathao_client.refresh_token = "valid_refresh_token"
+    pathao_client.token_expiry = time.time() + 3600
+
+    order_endpoint = f"{pathao_client.base_url}/aladdin/api/v1/orders"
+    refresh_endpoint = f"{pathao_client.base_url}/aladdin/api/v1/issue-token"
+
+    respx.post(order_endpoint).mock(
+        side_effect=[
+            httpx.Response(401, json={"message": "Unauthenticated 1"}),
+            httpx.Response(401, json={"message": "Unauthenticated 2"}),
+        ]
+    )
+    respx.post(refresh_endpoint).mock(
+        return_value=httpx.Response(200, json={"access_token": "refreshed_tok", "expires_in": 3600})
+    )
+
+    with pytest.raises(ProviderAuthenticationError):
+        pathao_client.create_order(sample_parcel)
+        
+@respx.mock
+def test_pathao_401_retry_network_failure(pathao_client: PathaoClient, sample_parcel: Parcel):
+    # Test 401 retry logic where the retry hits a network error
+    pathao_client.access_token = "expired_access_token"
+    pathao_client.refresh_token = "valid_refresh_token"
+    pathao_client.token_expiry = time.time() + 3600
+
+    order_endpoint = f"{pathao_client.base_url}/aladdin/api/v1/orders"
+    refresh_endpoint = f"{pathao_client.base_url}/aladdin/api/v1/issue-token"
+
+    respx.post(order_endpoint).mock(
+        side_effect=[
+            httpx.Response(401, json={"message": "Unauthenticated 1"}),
+            httpx.NetworkError("Network failed during retry"),
+        ]
+    )
+    respx.post(refresh_endpoint).mock(
+        return_value=httpx.Response(200, json={"access_token": "refreshed_tok", "expires_in": 3600})
+    )
+
+    with pytest.raises(ProviderAuthenticationError):
+        pathao_client.create_order(sample_parcel)

@@ -20,8 +20,10 @@ from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.interfaces.sms import BaseSMSProvider
 from jukto.logger import enable_debug_logging, logger
 from jukto.providers.logistics.pathao import PathaoClient
+from jukto.providers.logistics.redx import RedXClient
 from jukto.providers.logistics.steadfast import SteadfastClient
 from jukto.providers.sms.alphasms import AlphaSMSClient
+from jukto.providers.sms.bulksmsbd import BulkSMSBDClient
 from jukto.providers.sms.greenweb import GreenWebClient
 
 __all__ = [
@@ -32,9 +34,11 @@ __all__ = [
     # Logistics Providers
     "SteadfastClient",
     "PathaoClient",
+    "RedXClient",
     # SMS Providers
     "GreenWebClient",
     "AlphaSMSClient",
+    "BulkSMSBDClient",
     # Exceptions
     "JuktoError",
     "JuktoValidationError",

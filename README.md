@@ -3,19 +3,21 @@
 A modern, unified, open-source Python SDK connecting Bangladesh's fragmented third-party digital ecosystem (Logistics, SMS, Payments) into a single, elegant interface. Built on the **Strategy Pattern**, with complete typing, native debug logging, and standardized exception handling.
 
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)](#running-tests)
+[![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen.svg)](#running-tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## Features
+## Supported Providers
 
-- **Standardized Strategy Pattern:** Swap providers (Steadfast to Pathao, GreenWeb to AlphaSMS) without touching application logic.
-- **Normalized Exception Architecture:** Never catch raw `httpx.HTTPStatusError` again. Catch standardized exceptions like `ProviderAuthenticationError`, `InsufficientBalanceError`, or the root `JuktoError`.
-- **OAuth2 Token Lifecycle Management:** `PathaoClient` handles automated login, token caching, and proactive expiration renewal.
-- **Built-in Payload Masking & Debug Logger:** Native Python logging (`jukto.logger`) with automatic masking of API keys and passwords.
-- **Bangla API Quirks Handled:** Normalizes vendor anomalies (HTTP 200 responses with error strings, non-zero error codes, and inconsistent keys).
-- **Modern Python Typing:** Full type hints with `@dataclass` domain models and `from __future__ import annotations` compatibility down to Python 3.9+.
+| Category | Provider | Client Class | Auth Method |
+| :--- | :--- | :--- | :--- |
+| **Logistics** | Steadfast Courier | `SteadfastClient` | Api-Key & Secret-Key |
+| **Logistics** | Pathao Courier | `PathaoClient` | OAuth2 (Auto-issue & refresh) |
+| **Logistics** | RedX Logistics | `RedXClient` | Bearer Token |
+| **SMS** | GreenWeb SMS | `GreenWebClient` | Token |
+| **SMS** | AlphaSMS (sms.net.bd) | `AlphaSMSClient` | Api-Key |
+| **SMS** | BulkSMSBD | `BulkSMSBDClient` | Api-Key & Sender-ID |
 
 ---
 
@@ -35,16 +37,12 @@ uv add jukto
 
 ## Quickstart
 
-### 1. Logistics: Steadfast Courier
+### 1. Logistics: Steadfast, Pathao & RedX
 
 ```python
-from jukto import SteadfastClient, Parcel, JuktoError
+from jukto import SteadfastClient, PathaoClient, RedXClient, Parcel, JuktoError
 
-client = SteadfastClient(
-    api_key="your_steadfast_api_key",
-    secret_key="your_steadfast_secret_key"
-)
-
+# Define standard parcel model
 parcel = Parcel(
     invoice_id="INV-98231",
     recipient_name="Rahim Uddin",
@@ -54,85 +52,44 @@ parcel = Parcel(
     note="Fragile items. Handle with care."
 )
 
-try:
-    response = client.create_order(parcel)
-    print("Steadfast Order ID:", response["consignment"]["consignment_id"])
-except JuktoError as e:
-    print(f"Logistics Error: {e.message} (Status: {e.status_code})")
-```
+# 1. Steadfast Courier
+sf = SteadfastClient(api_key="...", secret_key="...")
+sf_order = sf.create_order(parcel)
 
----
-
-### 2. Logistics: Pathao Courier (with OAuth2 Auto-Management)
-
-`PathaoClient` automatically acquires, caches, and refreshes OAuth2 tokens.
-
-```python
-from jukto import PathaoClient, Parcel, JuktoError
-
-client = PathaoClient(
-    client_id="your_client_id",
-    client_secret="your_client_secret",
+# 2. Pathao Courier (automatic OAuth2 token lifecycle & proactive refreshing)
+pathao = PathaoClient(
+    client_id="...",
+    client_secret="...",
     username="merchant@example.com",
-    password="your_password",
-    store_id=1234,  # Default store
-    sandbox=True    # Toggle sandbox vs production
+    password="...",
+    store_id=1234,
+    sandbox=True
 )
+pathao_order = pathao.create_order(parcel)
 
-parcel = Parcel(
-    invoice_id="INV-PTH-001",
-    recipient_name="Karim Khan",
-    recipient_phone="01812345678",
-    recipient_address="Mirpur 10, Dhaka",
-    cod_amount=500.0,
-    recipient_city=1,   # Dhaka
-    recipient_zone=14,  # Mirpur
-)
-
-try:
-    order = client.create_order(parcel)
-    print("Pathao Consignment:", order["data"]["consignment_id"])
-except JuktoError as e:
-    print(f"Pathao Error: {e.message}")
+# 3. RedX Logistics
+redx = RedXClient(api_key="...", sandbox=True)
+redx_order = redx.create_order(parcel)
 ```
 
 ---
 
-### 3. SMS: GreenWeb SMS
+### 2. SMS: GreenWeb, AlphaSMS & BulkSMSBD
 
 ```python
-from jukto import GreenWebClient, JuktoError, InsufficientBalanceError
+from jukto import GreenWebClient, AlphaSMSClient, BulkSMSBDClient, InsufficientBalanceError, JuktoError
 
-sms_client = GreenWebClient(api_key="your_greenweb_token")
+# 1. GreenWeb SMS
+gw = GreenWebClient(api_key="your_gw_token")
+gw.send_sms(["01712345678"], "Your order is confirmed!")
 
-try:
-    result = sms_client.send_sms(
-        phone_numbers=["01712345678", "01812345678"],
-        message="Your Feather IT order has been confirmed!"
-    )
-    print("SMS Sent:", result)
-except InsufficientBalanceError:
-    print("Alert: GreenWeb SMS credits depleted! Please recharge.")
-except JuktoError as e:
-    print(f"SMS delivery failed: {e}")
-```
+# 2. AlphaSMS (sms.net.bd)
+alpha = AlphaSMSClient(api_key="your_alpha_key", sender_id="FEATHER_IT")
+alpha.send_sms("01712345678", "Your OTP is 492019")
 
----
-
-### 4. SMS: AlphaSMS (sms.net.bd)
-
-```python
-from jukto import AlphaSMSClient, JuktoError, InsufficientBalanceError
-
-client = AlphaSMSClient(api_key="your_alpha_key", sender_id="FEATHER_IT")
-
-try:
-    resp = client.send_sms("01712345678", "Your OTP is 123456")
-    print("AlphaSMS Sent:", resp)
-except InsufficientBalanceError:
-    print("Alert: AlphaSMS balance is empty!")
-except JuktoError as e:
-    print(f"AlphaSMS failed: {e}")
+# 3. BulkSMSBD
+bulk = BulkSMSBDClient(api_key="your_bulksms_key", sender_id="FEATHER_IT")
+bulk.send_sms("01712345678", "Welcome to Feather IT!")
 ```
 
 ---
@@ -174,6 +131,21 @@ JuktoError
     └── InsufficientBalanceError     # Account/SMS balance depleted
 ```
 
+### Catching Errors Cleanly
+
+```python
+from jukto import SteadfastClient, Parcel, ProviderAuthenticationError, InsufficientBalanceError, JuktoError
+
+try:
+    client.create_order(parcel)
+except ProviderAuthenticationError as err:
+    print(f"Auth failed on {err.provider}: {err.message}")
+except InsufficientBalanceError as err:
+    print(f"Balance empty on {err.provider}: {err.message}")
+except JuktoError as err:
+    print(f"General error: {err}")
+```
+
 ---
 
 ## Running Tests
@@ -186,7 +158,7 @@ uv run pytest
 
 Output:
 ```
-43 passed in 0.41s (88% total coverage)
+68 passed in 0.74s (98% total coverage)
 ```
 
 ---
@@ -197,10 +169,10 @@ Output:
 - [x] **Phase 2: Core Provider Development:**
   - [x] Steadfast Logistics
   - [x] Pathao Logistics (OAuth2 Lifecycle)
+  - [x] RedX Logistics
   - [x] GreenWeb SMS
   - [x] AlphaSMS (sms.net.bd)
-  - [ ] RedX Logistics
-  - [ ] BulkSMSBD
+  - [x] BulkSMSBD
 - [x] **Phase 3: Developer Experience (DX) & Error Handling:**
   - [x] Custom normalized exceptions (`jukto.exceptions`)
   - [x] Top-level exports (`from jukto import ...`)
@@ -208,10 +180,14 @@ Output:
   - [x] Comprehensive developer documentation
 - [x] **Phase 4: Testing & Quality Assurance:**
   - [x] Configured `pytest`, `pytest-httpx`, `respx`, and `pytest-cov`
-  - [x] Offline mocking fixtures with **88% test coverage**
+  - [x] Offline mocking fixtures with **98% test coverage**
 - [ ] **Phase 5: Publishing & CI/CD:**
-  - [ ] GitHub Actions test workflow
-  - [ ] PyPI distribution build and release
+  - [x] GitHub Actions test workflow (`.github/workflows/ci.yml`)
+  - [x] GitHub Actions PyPI publishing workflow (`.github/workflows/publish.yml`)
+  - [ ] Publish initial v0.1.0 release to PyPI
+- [ ] **Future (V2 Scope):**
+  - [ ] Payment Gateway Module (bKash, Nagad, SSLCommerz)
+  - [ ] Async Client Support (`httpx.AsyncClient`)
 
 ---
 

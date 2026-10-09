@@ -25,33 +25,34 @@ The SDK relies on strict separation between **Contracts** (Interfaces) and **Ada
 - [x] Configure PyPI build system (`pyproject.toml`).
 - [x] Setup standard `src` layout and open-source licensing (MIT).
 
-### Phase 2: Core Provider Development (Active)
+### Phase 2: Core Provider Development (Completed)
 - **Logistics Module:**
   - [x] Define `BaseLogisticsProvider` and `Parcel` dataclass.
   - [x] Implement `SteadfastClient`.
-  - [ ] Implement `PathaoClient`.
-  - [ ] Implement `RedXClient`.
+  - [x] Implement `PathaoClient` (with OAuth2 auto-lifecycle).
+  - [x] Implement `RedXClient`.
 - **SMS Module:**
-  - [x] Define `BaseSMSProvider``.
+  - [x] Define `BaseSMSProvider`.
   - [x] Implement `GreenWebClient`.
-  - [ ] Implement `AlphaSMSClient`.
-  - [ ] Implement `BulkSMSBDClient`.
+  - [x] Implement `AlphaSMSClient`.
+  - [x] Implement `BulkSMSBDClient`.
 
-### Phase 3: Developer Experience (DX) & Error Handling (Active)
+### Phase 3: Developer Experience (DX) & Error Handling (Completed)
 - [x] **Custom Exceptions:** Create `jukto.exceptions` (`JuktoError`, `ProviderAuthenticationError`, `InsufficientBalanceError`, `ProviderTimeoutError`, etc.) to catch and normalize errors from third-party endpoints.
-- [x] **Top-Level Imports:** Expose core classes in the root `__init__.py` so developers can use `from jukto import SteadfastClient, GreenWebClient, Parcel, JuktoError`.
+- [x] **Top-Level Imports:** Expose core classes in the root `__init__.py` so developers can use `from jukto import SteadfastClient, PathaoClient, RedXClient, GreenWebClient, AlphaSMSClient, BulkSMSBDClient`.
 - [x] **Developer Documentation:** Comprehensive README guide with code examples and error-handling flowcharts.
-- [ ] **Logging:** Implement a lightweight, native Python logger for tracking request/response payloads in development mode.
+- [x] **Logging:** Implemented `jukto.logger` with automated secret key redaction and `enable_debug_logging()`.
 
-### Phase 4: Testing & Quality Assurance
-- **Framework:** Implement `pytest`.
-- **Mocking:** Use `pytest-httpx` or `respx` to mock external API calls, ensuring the test suite runs offline and does not consume actual provider credits.
-- **Coverage:** Mandate 80%+ test coverage for all adapters before publishing.
+### Phase 4: Testing & Quality Assurance (Completed)
+- [x] **Framework:** Implemented `pytest` with `pyproject.toml` configuration.
+- [x] **Mocking:** Implemented `respx` offline fixtures for all providers.
+- [x] **Coverage:** Exceeded 80% mandate, reaching **98% overall test coverage** (68 test cases).
 
-### Phase 5: Publishing & CI/CD
-- **Local Build Check:** Generate `.whl` and `.tar.gz` distributions.
-- **PyPI Deployment:** Upload `v0.1.0` via Twine.
-- **GitHub Actions:** Automate tests on every push to `main`, and automate PyPI publishing on GitHub Releases.
+### Phase 5: Publishing & CI/CD (Active)
+- [x] **Local Build Check:** Verified `.whl` and `.tar.gz` generation with `uv build`.
+- [x] **GitHub Actions CI:** Multi-version matrix test workflow (`.github/workflows/ci.yml`).
+- [x] **PyPI Automation:** Trusted Publisher workflow (`.github/workflows/publish.yml`).
+- [ ] **PyPI Deployment:** Initial `v0.1.0` release.
 
 ## 5. Future Scope (V2 Deliverables)
 * **Payment Gateway Module:** Standardized interfaces for bKash, Nagad, and SSLCommerz.

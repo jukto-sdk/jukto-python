@@ -9,7 +9,9 @@ from jukto import (
     ResourceNotFoundError,
     ProviderServerError,
     ProviderTimeoutError,
+    ProviderConnectionError,
     ProviderRateLimitError,
+    ProviderError,
 )
 
 
@@ -77,14 +79,44 @@ def test_steadfast_validation_error(steadfast_client: SteadfastClient, sample_pa
 
 @respx.mock
 def test_steadfast_inline_error_on_200(steadfast_client: SteadfastClient, sample_parcel: Parcel):
+    # Inline 400
     respx.post(f"{steadfast_client.base_url}/create_order").mock(
         return_value=httpx.Response(
             200,
             json={"status": 400, "message": "Duplicate invoice id."},
         )
     )
-
     with pytest.raises(InvalidRequestError):
+        steadfast_client.create_order(sample_parcel)
+
+    # Inline 401
+    respx.post(f"{steadfast_client.base_url}/create_order").mock(
+        return_value=httpx.Response(
+            200,
+            json={"status": 401, "message": "Secret key expired."},
+        )
+    )
+    with pytest.raises(ProviderAuthenticationError):
+        steadfast_client.create_order(sample_parcel)
+
+    # Inline 404
+    respx.post(f"{steadfast_client.base_url}/create_order").mock(
+        return_value=httpx.Response(
+            200,
+            json={"status": 404, "message": "Not found inline."},
+        )
+    )
+    with pytest.raises(ResourceNotFoundError):
+        steadfast_client.create_order(sample_parcel)
+
+    # Inline other (500)
+    respx.post(f"{steadfast_client.base_url}/create_order").mock(
+        return_value=httpx.Response(
+            200,
+            json={"status": 500, "message": "Steadfast internal error."},
+        )
+    )
+    with pytest.raises(ProviderError):
         steadfast_client.create_order(sample_parcel)
 
 
@@ -122,10 +154,25 @@ def test_steadfast_server_error(steadfast_client: SteadfastClient, sample_parcel
 
 
 @respx.mock
-def test_steadfast_timeout(steadfast_client: SteadfastClient):
+def test_steadfast_generic_http_error(steadfast_client: SteadfastClient, sample_parcel: Parcel):
+    respx.post(f"{steadfast_client.base_url}/create_order").mock(
+        return_value=httpx.Response(418, text="I'm a teapot")
+    )
+
+    with pytest.raises(ProviderError):
+        steadfast_client.create_order(sample_parcel)
+
+
+@respx.mock
+def test_steadfast_timeout_and_network_error(steadfast_client: SteadfastClient):
     respx.get(f"{steadfast_client.base_url}/status_by_cid/987654").mock(
         side_effect=httpx.TimeoutException("Read timeout")
     )
-
     with pytest.raises(ProviderTimeoutError):
+        steadfast_client.check_status("987654")
+
+    respx.get(f"{steadfast_client.base_url}/status_by_cid/987654").mock(
+        side_effect=httpx.NetworkError("Failed to reach steadfast")
+    )
+    with pytest.raises(ProviderConnectionError):
         steadfast_client.check_status("987654")
