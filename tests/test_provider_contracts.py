@@ -61,7 +61,7 @@ def test_alphasms_undocumented_codes_have_no_guessed_semantics(code):
 @pytest.mark.parametrize('code', [1002, 1003, 1004, 1005, 1006, 1007, 1008, 1010, 1099])
 @respx.mock
 def test_bulksmsbd_unverified_codes_are_preserved_without_guessing(code):
-    client = jukto.BulkSMSBDClient('offline-key', 'offline-sender')
+    client = jukto.BulkSMSBDClient('offline-key', 'offline-sender', allow_insecure_http=True)
     payload = {'response_code': code, 'error_message': 'balance unauthorized invalid number'}
     respx.post(client.base_url).respond(200, json=payload)
     with pytest.raises(jukto.ProviderError) as caught:
@@ -75,7 +75,7 @@ def test_bulksmsbd_unverified_codes_are_preserved_without_guessing(code):
     {'response_code': 202.0}, {'response_code': '202'}])
 @respx.mock
 def test_bulksmsbd_unknown_structure_is_not_success(payload):
-    client = jukto.BulkSMSBDClient('offline-key', 'offline-sender')
+    client = jukto.BulkSMSBDClient('offline-key', 'offline-sender', allow_insecure_http=True)
     respx.post(client.base_url).respond(200, json=payload)
     with pytest.raises(jukto.ProviderError):
         client.send_sms('01700000000', 'offline message')

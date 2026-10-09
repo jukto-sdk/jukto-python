@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 import httpx
+from jukto._transport import secure_http_client, validate_endpoint
 
 from jukto.exceptions import (
     InvalidRequestError,
@@ -31,6 +32,8 @@ class RedXClient(BaseLogisticsProvider):
         base_url: Optional[str] = None,
         sandbox: bool = False,
         timeout: float = 30.0,
+        *,
+        allow_insecure_http: bool = False,
     ) -> None:
         resolved_url = base_url or (self.SANDBOX_URL if sandbox else self.PRODUCTION_URL)
         super().__init__(
@@ -38,6 +41,7 @@ class RedXClient(BaseLogisticsProvider):
             secret_key=None,
             base_url=resolved_url,
             timeout=timeout,
+            allow_insecure_http=allow_insecure_http,
         )
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -147,11 +151,13 @@ class RedXClient(BaseLogisticsProvider):
                 )
 
     def _request(self, method: str, endpoint: str, **kwargs: Any) -> dict[str, Any]:
+        validate_endpoint(endpoint, self.allow_insecure_http)
+        kwargs["follow_redirects"] = False
         masked_json = mask_sensitive(kwargs.get("json")) if "json" in kwargs else None
         logger.debug("RedX request: %s %s | payload: %s", method, endpoint, masked_json)
 
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
                 response = client.request(
                     method=method,
                     url=endpoint,

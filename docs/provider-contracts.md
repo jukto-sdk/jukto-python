@@ -62,3 +62,34 @@ Obtain the official create-parcel schema defining geographic name/ID fields and 
 - No retries or automatic failover were added. A server error does not establish that resubmitting SMS is safe.
 
 Task 1 is partially complete: matrix and AlphaSMS audit are complete; BulkSMSBD and RedX authoritative verification and the remaining providers' schema evidence are unresolved. Tasks 2 onward were not started.
+
+## Task 2: credential transport policy
+
+All six clients now reject cleartext endpoints by default, validate endpoints again
+before sending, enable TLS certificate verification explicitly, and refuse all
+redirects (including same-origin redirects). Invalid schemes, relative URLs, and
+embedded URL credentials are rejected. This policy also covers Pathao token issue,
+refresh, and authenticated replay. No client reuse or retry redesign was added.
+
+Every concrete client accepts the keyword-only `allow_insecure_http=True` option
+for deliberate legacy/local use. It permits HTTP only; it does not disable HTTPS
+certificate verification or enable redirect following. Credentials and SMS content
+sent over HTTP are unencrypted.
+
+BulkSMSBD's legacy HTTP constant remains unchanged pending authoritative verification
+of HTTPS **POST** support. Consequently, construction with its default HTTP endpoint
+now raises JuktoConfigurationError unless explicitly opted in. HTTPS override URLs
+are accepted by the transport policy but are not certified provider integrations.
+
+A credential-free `curl --head --max-time 20 --proto '=https'` request to the exact
+`https://bulksmsbd.net/api/smsapi` path on 2026-10-10 succeeded with default certificate
+verification. It returned HTTP 200, Apache, and Content-Type application/json.
+This establishes TLS reachability only: HEAD carries no response body and does not
+verify SMS POST compatibility or application success. The public documentation
+fetch for that URL failed; the provider homepage still exposes a login panel.
+The endpoint-verification checkbox remains open until provider-issued documentation
+or authorized, provenance-recorded sandbox evidence confirms HTTPS SMS submission.
+
+Compatibility: existing custom HTTP endpoints and default BulkSMSBD construction
+must now opt in explicitly. Prefer confirmed HTTPS endpoints. Endpoint policy
+failures raise JuktoConfigurationError before HTTP requests are made.

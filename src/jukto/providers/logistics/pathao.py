@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any, Optional
 import httpx
+from jukto._transport import secure_http_client, validate_endpoint
 
 from jukto.exceptions import (
     InvalidRequestError,
@@ -40,6 +41,8 @@ class PathaoClient(BaseLogisticsProvider):
         base_url: Optional[str] = None,
         sandbox: bool = False,
         timeout: float = 30.0,
+        *,
+        allow_insecure_http: bool = False,
     ) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
@@ -54,6 +57,7 @@ class PathaoClient(BaseLogisticsProvider):
             secret_key=client_secret,
             base_url=resolved_url,
             timeout=timeout,
+            allow_insecure_http=allow_insecure_http,
         )
 
         self.access_token: Optional[str] = None
@@ -134,7 +138,7 @@ class PathaoClient(BaseLogisticsProvider):
         logger.debug("Issuing new Pathao OAuth2 token for user: %s", self.username)
 
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
                 response = client.post(
                     endpoint,
                     json=payload,
@@ -183,7 +187,7 @@ class PathaoClient(BaseLogisticsProvider):
         logger.debug("Refreshing Pathao OAuth2 access token")
 
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
                 response = client.post(
                     endpoint,
                     json=payload,
@@ -216,6 +220,8 @@ class PathaoClient(BaseLogisticsProvider):
 
     def _request(self, method: str, endpoint: str, **kwargs: Any) -> dict[str, Any]:
         """Execute an authenticated HTTP request to Pathao API."""
+        validate_endpoint(endpoint, self.allow_insecure_http)
+        kwargs["follow_redirects"] = False
         token = self.get_token()
         headers = {
             "Authorization": f"Bearer {token}",
@@ -229,7 +235,7 @@ class PathaoClient(BaseLogisticsProvider):
         logger.debug("Pathao request: %s %s | payload: %s", method, endpoint, masked_json)
 
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
                 response = client.request(
                     method=method,
                     url=endpoint,
@@ -252,7 +258,7 @@ class PathaoClient(BaseLogisticsProvider):
                 token = self._refresh_access_token()
                 headers["Authorization"] = f"Bearer {token}"
                 try:
-                    with httpx.Client(timeout=self.timeout) as client:
+                    with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
                         retry_resp = client.request(
                             method=method,
                             url=endpoint,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 import httpx
+from jukto._transport import secure_http_client, validate_endpoint
 
 from jukto.exceptions import (
     InvalidRequestError,
@@ -28,12 +29,15 @@ class SteadfastClient(BaseLogisticsProvider):
         secret_key: str,
         base_url: Optional[str] = None,
         timeout: float = 30.0,
+        *,
+        allow_insecure_http: bool = False,
     ) -> None:
         super().__init__(
             api_key=api_key,
             secret_key=secret_key,
             base_url=base_url or self.DEFAULT_URL,
             timeout=timeout,
+            allow_insecure_http=allow_insecure_http,
         )
         self.headers = {
             "Api-Key": self.api_key,
@@ -148,6 +152,8 @@ class SteadfastClient(BaseLogisticsProvider):
 
     def _request(self, method: str, endpoint: str, **kwargs: Any) -> dict[str, Any]:
         """Execute HTTP request with robust error handling and debug logging."""
+        validate_endpoint(endpoint, self.allow_insecure_http)
+        kwargs["follow_redirects"] = False
         masked_json = mask_sensitive(kwargs.get("json")) if "json" in kwargs else None
         logger.debug(
             "Steadfast request: %s %s | payload: %s",
@@ -157,7 +163,7 @@ class SteadfastClient(BaseLogisticsProvider):
         )
 
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with secure_http_client(endpoint, self.timeout, self.allow_insecure_http) as client:
                 response = client.request(
                     method=method,
                     url=endpoint,

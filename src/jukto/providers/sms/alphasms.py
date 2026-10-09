@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 import httpx
+from jukto._transport import secure_http_client
 
 from jukto.exceptions import (
     InsufficientBalanceError,
@@ -31,12 +32,15 @@ class AlphaSMSClient(BaseSMSProvider):
         sender_id: Optional[str] = None,
         base_url: Optional[str] = None,
         timeout: float = 30.0,
+        *,
+        allow_insecure_http: bool = False,
     ) -> None:
         super().__init__(
             api_key=api_key,
             sender_id=sender_id,
             base_url=base_url or self.DEFAULT_URL,
             timeout=timeout,
+            allow_insecure_http=allow_insecure_http,
         )
 
     def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
@@ -147,7 +151,7 @@ class AlphaSMSClient(BaseSMSProvider):
         logger.debug("AlphaSMS request to %s | payload: %s", self.base_url, masked)
 
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            with secure_http_client(self.base_url, self.timeout, self.allow_insecure_http) as client:
                 response = client.post(self.base_url, data=payload)
                 logger.debug("AlphaSMS HTTP status: %d", response.status_code)
                 response.raise_for_status()

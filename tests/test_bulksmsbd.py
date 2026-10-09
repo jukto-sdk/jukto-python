@@ -15,7 +15,7 @@ from jukto import (
 
 @pytest.fixture
 def bulksmsbd_client() -> BulkSMSBDClient:
-    return BulkSMSBDClient(api_key="mock_bsms_key", sender_id="FEATHER_IT")
+    return BulkSMSBDClient(api_key="mock_bsms_key", sender_id="FEATHER_IT", allow_insecure_http=True)
 
 
 @respx.mock

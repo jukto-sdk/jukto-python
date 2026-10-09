@@ -108,7 +108,11 @@ alpha = AlphaSMSClient(api_key="your_alpha_key", sender_id="FEATHER_IT")
 alpha.send_sms("01712345678", "Your OTP is 492019")
 
 # 3. BulkSMSBD
-bulk = BulkSMSBDClient(api_key="your_bulksms_key", sender_id="FEATHER_IT")
+# Explicit legacy HTTP opt-in: credentials and message content are unencrypted.
+# HTTPS SMS POST support is pending independent verification.
+bulk = BulkSMSBDClient(
+    api_key="your_bulksms_key", sender_id="FEATHER_IT", allow_insecure_http=True
+)
 bulk.send_sms("01712345678", "Welcome to Feather IT!")
 ```
 
@@ -165,3 +169,9 @@ If you are building SaaS, eCommerce, or Enterprise applications in Bangladesh, *
 Provider behavior verification and compatibility limitations are recorded in the
 [provider contract audit](docs/provider-contracts.md). This distinguishes published
 provider evidence from SDK assumptions and documents error-classification changes.
+
+All clients require HTTPS by default and refuse redirects. Legacy/local HTTP needs
+an explicit `allow_insecure_http=True` constructor option. BulkSMSBD's legacy HTTP
+default now requires that opt-in while HTTPS SMS POST support remains unverified.
+See the [transport policy and evidence](docs/provider-contracts.md#task-2-credential-transport-policy)
+for migration details.
