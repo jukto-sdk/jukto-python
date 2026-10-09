@@ -13,3 +13,4 @@ htmlcov/
 .pytest_cache/
 site/
 LAUNCH_PLAYBOOK.md
+REVIEW_PROMPT_ASTRA.md
