@@ -1,0 +1,22 @@
+{
+  "source": "https://sms.bd/api",
+  "verified_on": "2026-10-10",
+  "evidence_kind": "official_documentation",
+  "notes": "JSON example uses integer error; C# examples compare string zero. Fixture payloads are synthetic, not captured transactions. Exception names are Jukto classifications of documented semantics.",
+  "errors": [
+    [400, "invalid parameter", "InvalidRequestError"],
+    [403, "permission denied", "ProviderAuthenticationError"],
+    [404, "resource missing", "ResourceNotFoundError"],
+    [405, "authorization required", "ProviderAuthenticationError"],
+    [409, "server-side failure", "ProviderServerError"],
+    [410, "account expired", "ProviderAuthenticationError"],
+    [411, "reseller expired or suspended", "ProviderAuthenticationError"],
+    [412, "invalid schedule", "InvalidRequestError"],
+    [413, "invalid sender", "InvalidRequestError"],
+    [414, "empty message", "InvalidRequestError"],
+    [415, "oversized message", "InvalidRequestError"],
+    [416, "no valid recipient", "InvalidRequestError"],
+    [417, "balance depleted", "InsufficientBalanceError"],
+    [420, "blocked content", "InvalidRequestError"]
+  ]
+}

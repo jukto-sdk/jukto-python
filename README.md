@@ -161,3 +161,7 @@ If you are building SaaS, eCommerce, or Enterprise applications in Bangladesh, *
 
 **MIT License** © 2026 [Mehedi Hasan Faysal](https://github.com/MahdiBuilds) / [Feather IT](https://featherit.com).  
 *Built with ❤️ for the developers of Bangladesh.*
+
+Provider behavior verification and compatibility limitations are recorded in the
+[provider contract audit](docs/provider-contracts.md). This distinguishes published
+provider evidence from SDK assumptions and documents error-classification changes.

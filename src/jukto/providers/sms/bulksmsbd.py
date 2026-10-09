@@ -6,7 +6,6 @@ from typing import Any, Optional
 import httpx
 
 from jukto.exceptions import (
-    InsufficientBalanceError,
     InvalidRequestError,
     ProviderAuthenticationError,
     ProviderConnectionError,
@@ -81,55 +80,31 @@ class BulkSMSBDClient(BaseSMSProvider):
             ) from exc
 
     def _inspect_response_data(self, data: Any, response: httpx.Response) -> dict[str, Any]:
-        """Inspect BulkSMSBD response code and payload."""
-        if not isinstance(data, dict):
-            return {"data": data}
+        """Preserve codes without assigning unverified provider-specific meanings.
 
-        response_code = data.get("response_code")
-        error_message_text = data.get("error_message") or data.get("message") or "BulkSMSBD error"
+        See docs/provider-contracts.md for the unresolved official contract.
+        """
+        response_code = data.get("response_code") if isinstance(data, dict) else None
+        if type(response_code) is not int:
+            raise ProviderError(
+                "BulkSMSBD returned an unrecognized response-code structure",
+                status_code=response.status_code,
+                response_body=data,
+                provider="BulkSMSBD",
+            )
 
-        # BulkSMSBD Success is usually 202
-        if response_code not in (None, 202):
-            error_message = f"BulkSMSBD error ({response_code}): {error_message_text}"
-            logger.error("BulkSMSBD returned error: %s", error_message)
+        # Legacy compatibility only: 202 has not been independently verified.
+        # Do not infer string/float variants or error meanings from existing mocks.
+        if response_code == 202:
+            return data
 
-            if response_code in (1002, 1007):  # 1002: Invalid API Key, 1007: Balance low/unauthorized
-                if "balance" in error_message_text.lower():
-                    raise InsufficientBalanceError(
-                        error_message,
-                        status_code=response_code,
-                        response_body=data,
-                        provider="BulkSMSBD",
-                    )
-                raise ProviderAuthenticationError(
-                    error_message,
-                    status_code=response_code,
-                    response_body=data,
-                    provider="BulkSMSBD",
-                )
-            elif response_code in (1003, 1004, 1008):  # 1003: Insufficient balance, 1008: Low balance
-                raise InsufficientBalanceError(
-                    error_message,
-                    status_code=response_code,
-                    response_body=data,
-                    provider="BulkSMSBD",
-                )
-            elif response_code in (1005, 1006, 1010):  # Invalid number, sender id, message format
-                raise InvalidRequestError(
-                    error_message,
-                    status_code=response_code,
-                    response_body=data,
-                    provider="BulkSMSBD",
-                )
-            else:
-                raise ProviderError(
-                    error_message,
-                    status_code=response_code,
-                    response_body=data,
-                    provider="BulkSMSBD",
-                )
-
-        return data
+        message = data.get("error_message") or data.get("message") or "Unclassified provider error"
+        raise ProviderError(
+            f"BulkSMSBD error ({response_code}): {message}",
+            status_code=response_code,
+            response_body=data,
+            provider="BulkSMSBD",
+        )
 
     def send_sms(self, phone_numbers: str | list[str], message: str) -> dict[str, Any]:
         if isinstance(phone_numbers, list):

@@ -14,6 +14,7 @@ from jukto.exceptions import (
     ProviderRateLimitError,
     ProviderServerError,
     ProviderTimeoutError,
+    ResourceNotFoundError,
 )
 from jukto.interfaces.sms import BaseSMSProvider
 from jukto.logger import logger, mask_sensitive
@@ -81,47 +82,52 @@ class AlphaSMSClient(BaseSMSProvider):
             ) from exc
 
     def _inspect_response_data(self, data: Any, response: httpx.Response) -> dict[str, Any]:
-        """Inspect AlphaSMS response payload for error codes (e.g. error: 401, 402, 405)."""
-        if not isinstance(data, dict):
-            return {"data": data}
+        """Classify documented codes; provenance: tests/fixtures/alphasms_contract.json."""
+        raw_code = data.get("error") if isinstance(data, dict) else None
+        # The official JSON example uses integers; its C# examples use string codes.
+        # Accept canonical decimal strings only, not bools, floats or coercible objects.
+        if type(raw_code) is int:
+            error_code = raw_code
+        elif isinstance(raw_code, str) and raw_code.isascii() and raw_code.isdecimal() and str(int(raw_code)) == raw_code:
+            error_code = int(raw_code)
+        else:
+            raise ProviderError(
+                "AlphaSMS returned an unrecognized error-code structure",
+                status_code=response.status_code,
+                response_body=data,
+                provider="AlphaSMS",
+            )
 
-        error_code = data.get("error")
+        if error_code == 0:
+            return data
+
+        # Jukto categories derived from https://sms.bd/api (checked 2026-10-10).
+        # 403 includes permission denial; expired accounts need account remediation.
+        error_types = {
+            400: InvalidRequestError,
+            403: ProviderAuthenticationError,
+            404: ResourceNotFoundError,
+            405: ProviderAuthenticationError,
+            409: ProviderServerError,
+            410: ProviderAuthenticationError,
+            411: ProviderAuthenticationError,
+            412: InvalidRequestError,
+            413: InvalidRequestError,
+            414: InvalidRequestError,
+            415: InvalidRequestError,
+            416: InvalidRequestError,
+            417: InsufficientBalanceError,
+            420: InvalidRequestError,
+        }
         msg = data.get("msg") or data.get("message") or "AlphaSMS error"
-
-        if error_code is not None and error_code != 0:
-            error_message = f"AlphaSMS error ({error_code}): {msg}"
-            logger.error("AlphaSMS API returned error: %s", error_message)
-
-            if error_code in (401, 403):
-                raise ProviderAuthenticationError(
-                    error_message,
-                    status_code=error_code,
-                    response_body=data,
-                    provider="AlphaSMS",
-                )
-            elif error_code == 402:
-                raise InsufficientBalanceError(
-                    error_message,
-                    status_code=error_code,
-                    response_body=data,
-                    provider="AlphaSMS",
-                )
-            elif error_code in (400, 405, 406, 422):
-                raise InvalidRequestError(
-                    error_message,
-                    status_code=error_code,
-                    response_body=data,
-                    provider="AlphaSMS",
-                )
-            else:
-                raise ProviderError(
-                    error_message,
-                    status_code=error_code,
-                    response_body=data,
-                    provider="AlphaSMS",
-                )
-
-        return data
+        error_message = f"AlphaSMS error ({error_code}): {msg}"
+        logger.error("AlphaSMS API returned error: %s", error_message)
+        raise error_types.get(error_code, ProviderError)(
+            error_message,
+            status_code=error_code,
+            response_body=data,
+            provider="AlphaSMS",
+        )
 
     def send_sms(self, phone_numbers: str | list[str], message: str) -> dict[str, Any]:
         if isinstance(phone_numbers, list):

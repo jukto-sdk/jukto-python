@@ -4,7 +4,6 @@ import pytest
 from jukto import (
     BulkSMSBDClient,
     ProviderAuthenticationError,
-    InsufficientBalanceError,
     InvalidRequestError,
     ProviderServerError,
     ProviderTimeoutError,
@@ -33,19 +32,19 @@ def test_bulksmsbd_send_sms_success(bulksmsbd_client: BulkSMSBDClient):
 
 
 @respx.mock
-def test_bulksmsbd_auth_errors(bulksmsbd_client: BulkSMSBDClient):
+def test_bulksmsbd_unclassified_1002(bulksmsbd_client: BulkSMSBDClient):
     respx.post(bulksmsbd_client.base_url).mock(
         return_value=httpx.Response(
             200,
             json={"response_code": 1002, "error_message": "Invalid API Key"},
         )
     )
-    with pytest.raises(ProviderAuthenticationError):
+    with pytest.raises(ProviderError):
         bulksmsbd_client.send_sms("01711112222", "Test")
 
 
 @respx.mock
-def test_bulksmsbd_balance_errors(bulksmsbd_client: BulkSMSBDClient):
+def test_bulksmsbd_unclassified_codes_and_messages(bulksmsbd_client: BulkSMSBDClient):
     # 1003
     respx.post(bulksmsbd_client.base_url).mock(
         return_value=httpx.Response(
@@ -53,7 +52,7 @@ def test_bulksmsbd_balance_errors(bulksmsbd_client: BulkSMSBDClient):
             json={"response_code": 1003, "error_message": "Insufficient Balance"},
         )
     )
-    with pytest.raises(InsufficientBalanceError):
+    with pytest.raises(ProviderError):
         bulksmsbd_client.send_sms("01711112222", "Test")
 
     # 1007 with balance
@@ -63,7 +62,7 @@ def test_bulksmsbd_balance_errors(bulksmsbd_client: BulkSMSBDClient):
             json={"response_code": 1007, "error_message": "Account balance is too low"},
         )
     )
-    with pytest.raises(InsufficientBalanceError):
+    with pytest.raises(ProviderError):
         bulksmsbd_client.send_sms("01711112222", "Test")
 
     # 1007 with no balance mention
@@ -73,19 +72,19 @@ def test_bulksmsbd_balance_errors(bulksmsbd_client: BulkSMSBDClient):
             json={"response_code": 1007, "error_message": "Unauthorized access"},
         )
     )
-    with pytest.raises(ProviderAuthenticationError):
+    with pytest.raises(ProviderError):
         bulksmsbd_client.send_sms("01711112222", "Test")
 
 
 @respx.mock
-def test_bulksmsbd_invalid_request(bulksmsbd_client: BulkSMSBDClient):
+def test_bulksmsbd_unclassified_1005_and_unknown(bulksmsbd_client: BulkSMSBDClient):
     respx.post(bulksmsbd_client.base_url).mock(
         return_value=httpx.Response(
             200,
             json={"response_code": 1005, "error_message": "Invalid Mobile Number"},
         )
     )
-    with pytest.raises(InvalidRequestError):
+    with pytest.raises(ProviderError):
         bulksmsbd_client.send_sms("123", "Test")
 
     # Other error code
@@ -103,8 +102,8 @@ def test_bulksmsbd_non_dict_data(bulksmsbd_client: BulkSMSBDClient):
     respx.post(bulksmsbd_client.base_url).mock(
         return_value=httpx.Response(200, json=["unexpected", "list"])
     )
-    resp = bulksmsbd_client.send_sms("01711112222", "Test")
-    assert resp == {"data": ["unexpected", "list"]}
+    with pytest.raises(ProviderError):
+        bulksmsbd_client.send_sms("01711112222", "Test")
 
 
 @respx.mock
