@@ -8,6 +8,31 @@
     "evidence_kind": "published specifications, not observed provider traffic",
     "sandbox_transactions": "not performed; merchant access not supplied"
   },
+  "remaining_gate_audit": {
+    "checked_on": "2026-10-10",
+    "status": "open",
+    "merchant_evidence": "none found in repository; existing fixture is synthetic/specification-derived",
+    "additional_sources": [
+      "https://sslcommerz.com/integration-document/",
+      "https://github.com/sslcommerz/SSLCommerz-Python/blob/897c28e303e637e588829e5769e32b2ad77328f7/sslcommerz_lib/sslcommerz.py",
+      "https://github.com/sslcommerz/SSLCommerz-Python/blob/897c28e303e637e588829e5769e32b2ad77328f7/README.md"
+    ],
+    "source_conflicts": {
+      "refund_trans_id": "v4 parameter table requires it; older official examples and pinned Python implementation omit it; retain v4 requirement",
+      "sha2": "pinned README shows a field; pinned implementation verifies MD5 only; no verified SHA-2 protocol",
+      "tls": "examples sometimes disable certificate verification; SDK retains verification"
+    },
+    "unresolved": [
+      "authorized merchant lifecycle verification",
+      "cancelled refund terminal meaning",
+      "provider-enforced idempotency scope and retention",
+      "refund reconciliation without provider reference",
+      "refund amounts and account/channel limits",
+      "SHA-2 protocol and merchant configuration",
+      "negative/pending response shapes and alternate checkout origins"
+    ],
+    "payment_api_calls": "none"
+  },
   "query_states": [
     [
       "VALID",

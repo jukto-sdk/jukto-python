@@ -87,3 +87,42 @@ hold fulfillment. Browser success URLs and raw callbacks cannot establish paymen
 
 This audit does not complete the external verification gate for task 13. Do not add
 sibling payment adapters or claim production readiness before resolving it.
+
+## Remaining-gate re-audit (2026-10-10)
+
+Re-read the official v4 and legacy specifications, the
+[corporate integration document](https://sslcommerz.com/integration-document/), and
+the [official Python implementation at commit 897c28e](https://github.com/sslcommerz/SSLCommerz-Python/blob/897c28e303e637e588829e5769e32b2ad77328f7/sslcommerz_lib/sslcommerz.py).
+Repository inventory found no sanitized merchant captures, account-specific
+verification record or provider support clarification. The existing contract fixture
+is published-specification evidence with synthetic test data, not merchant evidence.
+Only public documentation/source was retrieved; no payment API was contacted.
+
+| Open contract | Audit result | Evidence needed to close it |
+| --- | --- | --- |
+| Actual merchant lifecycle | Registration instructions do not establish account access or successful checkout/refund operation | Authorized sandbox record linking initiation, IPN, validation, both query modes, partial refund and final refund state |
+| Cancelled refund | Both developer specifications retain conflicting completion wording | Provider clarification of terminal meaning and whether funds moved, with matching sanitized refund query and merchant ledger evidence |
+| Idempotency | Unique references and `processing` do not define duplicate-request atomicity, expiry or replay guarantees | Provider guarantee specifying key scope, retention, conflicting payloads and concurrent duplicates; observed duplicates alone cannot establish a guarantee |
+| Refund timeout without reference | Published query requires `refund_ref_id`; `refe_id` is an optional reconciliation reference, not a documented query key | Supported lookup/reconciliation procedure using the stored merchant refund ID, or a documented operator procedure |
+| Refunded amount and limits | Refund query has no amount/currency fields; account/channel limits and cumulative enforcement remain unspecified | Sanitized merchant refund ledger tied to bank/refund IDs and authoritative limits/settlement rules |
+| SHA-2-only notifications | Official Python README includes `verify_sign_sha2`, but its implementation verifies MD5 `verify_sign` only | Provider algorithm, canonicalization/encoding rules, signed-field requirements and independent test vectors; a sample SHA-2 field is insufficient |
+| Missing/empty/pending envelopes and checkout origins | Published examples do not establish all negative shapes or alternate trusted origins | Provenance-recorded responses for the supported BDT hosted profile and an authoritative origin policy |
+
+Source precedence matters: v4's refund parameter table requires `refund_trans_id`
+from February 2025, while its PHP sample, the corporate document and pinned Python
+implementation omit it. Keep the explicit v4 requirement; older examples do not
+justify removing it. Official examples also disable TLS verification in places;
+Jukto retains certificate verification. IPN cancellation states and invoice/Quick
+Bank Pay contracts do not define hosted refund status or idempotency guarantees.
+
+For future evidence, record environment, API/profile/version, UTC timestamp,
+authorization scope, HTTP method/path/status, response shape, source/capture origin
+and stable pseudonymous identifiers linking the whole lifecycle. Keep exact
+synthetic/non-personal amounts and statuses. Remove credentials, cookies, customer
+details, card data and checkout URLs containing tokens before committing evidence.
+Redacting a signed field invalidates its original signature: label such captures
+as redacted schema evidence, and keep independently derived synthetic signature
+vectors separate. Do not regenerate a signature and call it a captured callback.
+
+Acceptance is **still open**. Public specifications cannot replace authorized
+account-specific lifecycle verification, and no unsupported checkbox was closed.

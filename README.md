@@ -1,8 +1,7 @@
 # Jukto (যুক্ত) Python SDK 🇧🇩
 
 A Python SDK for Bangladesh's SMS and logistics APIs, created by
-[Mehedi Hasan Faysal](https://github.com/MahdiBuilds), CTO of
-[Feather IT](https://featherit.com).
+[Mehedi H Faysal](https://mahdiblogs.com).
 
 [![CI](https://github.com/jukto-sdk/jukto-python/actions/workflows/ci.yml/badge.svg)](https://github.com/jukto-sdk/jukto-python/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -93,4 +92,4 @@ python -m mkdocs build --strict
 
 ## License
 
-[MIT](LICENSE) © 2026 Mehedi Hasan Faysal / Feather IT.
+[MIT](LICENSE) © 2026 Mehedi Hasan Faysal.

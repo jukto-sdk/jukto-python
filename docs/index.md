@@ -1,7 +1,7 @@
 # Jukto Python SDK
 
 Jukto is an open-source sync and native asyncio SDK for Bangladesh SMS and logistics APIs,
-created by [Mehedi Hasan Faysal](https://github.com/MahdiBuilds), CTO of Feather IT.
+created by [Mehedi H Faysal](https://mahdiblogs.com).
 It provides shared interfaces, typed domain results and classifications for known
 provider failures. Raw responses remain available, and unverified behavior stays
 explicit in the [contract matrix](provider-contracts.md).
