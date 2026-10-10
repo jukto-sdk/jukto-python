@@ -303,6 +303,12 @@ async def test_async_transport_configuration(setting):
                 provider = AsyncAlphaSMSClient('synthetic', **kwargs)
                 async with provider: pass
 
+
+def test_async_client_type_error_is_actionable():
+    with httpx.Client() as sync:
+        with pytest.raises(jukto.JuktoConfigurationError, match='must be an asynchronous httpx.AsyncClient'):
+            AsyncAlphaSMSClient('synthetic', http_client=sync)
+
 @pytest.mark.anyio
 async def test_borrowed_auth_redirect_and_timeout_overridden():
     requests = []

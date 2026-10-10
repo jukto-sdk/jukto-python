@@ -103,7 +103,7 @@ class AsyncTransport:
                  http_client: httpx.AsyncClient | None = None,
                  allow_insecure_http: bool = False) -> None:
         if http_client is not None and not isinstance(http_client, httpx.AsyncClient):
-            raise JuktoConfigurationError('http_client must be a synchronous httpx.AsyncClient')
+            raise JuktoConfigurationError('http_client must be an asynchronous httpx.AsyncClient')
         if http_client is not None and limits is not None:
             raise JuktoConfigurationError('Configure limits on the borrowed http_client, not the provider')
         if limits is not None and not isinstance(limits, httpx.Limits):
