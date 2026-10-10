@@ -11,10 +11,10 @@ from jukto.results import Outcome, SMSSubmissionResult
 
 
 class JuktoError(Exception):
-    """Base exception for all Jukto SDK errors.
+    """Base exception for recognized, normalized SDK errors.
 
-    All exceptions raised by Jukto inherit from this class, allowing developers
-    to catch all SDK errors with a single `except JuktoError:` block.
+    Catch these errors with `except JuktoError:`. Internal programming errors
+    are not universally wrapped and can escape outside this hierarchy.
     """
 
     def __init__(
