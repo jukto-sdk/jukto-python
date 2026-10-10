@@ -36,8 +36,10 @@ The unreleased `Async*Client` classes support native awaited calls; see the
 
 ## Can I use bKash, Nagad or SSLCommerz today?
 
-No. Payment integration is planned. There are no payment clients, execution,
-webhook verification or refund APIs in this version.
+The unreleased source tree implements one scoped SSLCOMMERZ hosted BDT flow,
+including server verification and refund APIs. It is not sandbox/live certified.
+Standalone bKash and Nagad clients remain planned. See the
+[payment guide](guides/payments.md) and [contract audit](payment-contracts.md).
 
 ## Are the provider integrations production-certified?
 

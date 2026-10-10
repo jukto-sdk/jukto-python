@@ -1,0 +1,95 @@
+{
+  "provenance": {
+    "checked_on": "2026-10-10",
+    "api_version": "4.00",
+    "specification": "https://developer.sslcommerz.com/doc/v4/",
+    "signature_specification": "https://developer.sslcommerz.com/docs.html",
+    "official_signature_implementation": "https://github.com/sslcommerz/SSLCommerz-PHP/blob/46fdf3a68ab8f071d38c334078065bbd45d3fcfc/lib/SslCommerzNotification.php#L163",
+    "evidence_kind": "published specifications, not observed provider traffic",
+    "sandbox_transactions": "not performed; merchant access not supplied"
+  },
+  "query_states": [
+    [
+      "VALID",
+      "paid"
+    ],
+    [
+      "VALIDATED",
+      "paid"
+    ],
+    [
+      "PENDING",
+      "pending"
+    ],
+    [
+      "FAILED",
+      "failed"
+    ]
+  ],
+  "api_connect_errors": [
+    [
+      "FAILED",
+      "ProviderAuthenticationError"
+    ],
+    [
+      "INACTIVE",
+      "ProviderAuthenticationError"
+    ],
+    [
+      "INVALID_REQUEST",
+      "InvalidRequestError"
+    ]
+  ],
+  "refund_initiation_states": [
+    [
+      "success",
+      "pending"
+    ],
+    [
+      "processing",
+      "pending"
+    ],
+    [
+      "failed",
+      "failed"
+    ]
+  ],
+  "refund_query_states": [
+    [
+      "refunded",
+      "refunded"
+    ],
+    [
+      "processing",
+      "pending"
+    ],
+    [
+      "cancelled",
+      "unknown"
+    ]
+  ],
+  "refund_cancelled_policy": "official description contradicts label; no definitive mapping",
+  "refund_trans_id": {
+    "mandatory": true,
+    "introduced": "2025-02-24"
+  },
+  "synthetic_signature_vector": {
+    "origin": "derived from official algorithm using only synthetic credentials/data; not a captured callback",
+    "store_id": "synthetic-store",
+    "store_password": "synthetic-password",
+    "notification": {
+      "status": "VALID",
+      "tran_id": "synthetic-order",
+      "val_id": "synthetic-val",
+      "bank_tran_id": "synthetic-bank",
+      "amount": "100.00",
+      "currency_amount": "100.00",
+      "currency": "BDT",
+      "currency_type": "BDT",
+      "risk_level": "0",
+      "store_id": "synthetic-store",
+      "verify_key": "amount,bank_tran_id,currency,currency_amount,currency_type,risk_level,status,store_id,tran_id,val_id",
+      "verify_sign": "4969570c9b16b78f872f81584df7a7f4"
+    }
+  }
+}

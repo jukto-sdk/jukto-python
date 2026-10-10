@@ -25,7 +25,13 @@
 - Native asyncio clients for all six providers with shared sync/async contracts,
   owned/borrowed lifetime, cancellation-safe cleanup and Pathao single-flight refresh.
 - Native FastAPI lifespan/dependency example with bounded in-flight requests.
-- Payment integrations remain planned; these changes have not been released.
+- Scoped SSLCOMMERZ hosted BDT payment initiation, customer action, signature/server
+  verification, complete transaction queries and partial refund request/query APIs.
+- Shared sync/async payment contracts, exact money, safe risk holds and ambiguous
+  side-effect metadata, including state-changing refund GET; no automatic replay.
+- Durable SQLite entitlement/refund reservation example and offline lifecycle checks.
+- Suppress credential-bearing HTTPX URL records only during SDK payment requests.
+- bKash/Nagad remain planned. Sandbox/live verification is pending; no release.
 
 ### Migration
 

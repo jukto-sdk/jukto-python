@@ -539,3 +539,11 @@ parsers, classifications and normalized result helpers as sync clients. All
 verification gaps above apply equally to async operations. No new provider
 endpoint, success vocabulary or idempotency guarantee was inferred for this task.
 See [native async](guides/async.md) for asyncio scope, cancellation and lifecycle.
+
+## First payment adapter (task 13, unreleased)
+
+SSLCOMMERZ hosted BDT checkout is the only payment integration. Sync/async clients
+share audited parsers and validation. See the [separate payment contract matrix](payment-contracts.md)
+for official v4/signature provenance, requirements and unresolved sandbox/refund
+contracts. No live compatibility or provider idempotency is certified. Standalone
+bKash/Nagad remain planned.

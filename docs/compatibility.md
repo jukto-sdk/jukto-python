@@ -50,3 +50,12 @@ Consult [the audit](provider-contracts.md) for exact evidence and open contracts
 behavior. Clients are scoped to one asyncio loop. See the [async guide](guides/async.md)
 for ownership, cancellation and bounded concurrency. Provider verification gaps
 apply to both interfaces. No release is published as part of this change.
+
+## Hosted payments (unreleased)
+
+`SSLCommerzClient`/`AsyncSSLCommerzClient` are additive and default to sandbox.
+Existing SMS/logistics behavior is unchanged. The scoped BDT, non-physical hosted
+flow requires exact Decimal amounts, HTTPS URLs and trusted stored references.
+Read the [payment contract audit](payment-contracts.md): signatures do not bypass
+server verification, refund GET is a financial side effect, and external sandbox
+verification remains pending. No siblings or release were added.

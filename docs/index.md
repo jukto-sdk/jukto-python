@@ -7,7 +7,8 @@ provider failures. Raw responses remain available, and unverified behavior stays
 explicit in the [contract matrix](provider-contracts.md).
 
 Adapters currently cover Steadfast, Pathao, RedX, GreenWeb, AlphaSMS and BulkSMSBD.
-Payments remain planned. Native asyncio clients are available in the unreleased
+The unreleased tree adds [SSLCOMMERZ hosted BDT payments](guides/payments.md);
+standalone bKash and Nagad remain planned. Native asyncio clients are available in the unreleased
 source tree; see the [async guide](guides/async.md). Provider
 switching requires account/configuration and capability changes; typed models do
 not erase provider-specific requirements or certify delivery semantics.

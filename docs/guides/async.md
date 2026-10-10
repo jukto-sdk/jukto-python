@@ -3,7 +3,8 @@
 The source tree provides `AsyncAlphaSMSClient`, `AsyncBulkSMSBDClient`,
 `AsyncGreenWebClient`, `AsyncPathaoClient`, `AsyncRedXClient` and
 `AsyncSteadfastClient`, exported from `jukto`. These additions have not been
-published to PyPI by this task. Payments remain planned.
+published to PyPI by these tasks. `AsyncSSLCommerzClient` additionally supports
+the scoped [hosted payment flow](payments.md); bKash/Nagad remain planned.
 
 Use the same constructor configuration as the sync client, with an optional
 borrowed `httpx.AsyncClient`. Await `send_sms`/`submit_sms`, `create_order`/

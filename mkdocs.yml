@@ -1,5 +1,5 @@
 site_name: Jukto Python SDK
-site_description: Sync and native asyncio Python SDK for Bangladesh SMS and logistics APIs. Payments are planned. Native async clients are unreleased. Created by Mehedi Hasan Faysal.
+site_description: Sync and native asyncio Python SDK for Bangladesh SMS and logistics APIs. SSLCOMMERZ hosted BDT payments are unreleased; bKash and Nagad are planned. Native async clients are unreleased. Created by Mehedi Hasan Faysal.
 site_author: Mehedi Hasan Faysal
 site_url: https://jukto-sdk.github.io/jukto-python/
 
@@ -45,10 +45,12 @@ nav:
     - SMS Gateways (Bangladesh): guides/sms.md
     - Django, FastAPI and Testing: guides/frameworks.md
     - Native Async and FastAPI: guides/async.md
+    - Hosted Payments: guides/payments.md
   - Exception Handling: guides/errors.md
   - FAQ (AEO & BD Context): faq.md
   - Architecture: architecture.md
   - Provider Contracts and Capabilities: provider-contracts.md
+  - Payment Contract Audit: payment-contracts.md
   - CI and Releases: ci-and-releases.md
   - Compatibility and Migration: compatibility.md
   - Contributing: contributing.md
@@ -57,6 +59,7 @@ nav:
   - API Reference:
     - Logistics Providers: api/logistics.md
     - SMS Providers: api/sms.md
+    - Payments: api/payments.md
     - Exceptions: api/exceptions.md
 
 markdown_extensions:
