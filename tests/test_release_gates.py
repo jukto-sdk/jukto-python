@@ -104,3 +104,10 @@ def test_supported_versions_receive_all_checks():
     download = next(step for step in steps if step.get("uses", "").startswith("actions/download-artifact@"))
     assert download["with"]["name"] == "distributions-python-3.14"
     assert not any("python -m build" in step.get("run", "") for step in steps)
+
+
+def test_release_checkout_uses_event_commit_not_mutable_tag():
+    import yaml
+    workflow = yaml.load((ROOT / ".github/workflows/publish.yml").read_text(), Loader=yaml.BaseLoader)
+    checkout = workflow["jobs"]["resolve"]["steps"][0]
+    assert checkout["with"]["ref"] == "${{ github.sha }}"

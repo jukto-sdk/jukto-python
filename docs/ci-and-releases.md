@@ -48,9 +48,10 @@ No provider traffic occurs.
 ## Publication dependency chain
 
 Only a **published GitHub release** triggers `publish.yml`; ordinary pushes and
-PRs cannot publish. The release tag is checked out and resolved once to a commit
-SHA (including annotated tags). Every check and release-validation checkout uses
-that SHA. Release validation downloads the exact immutable artifact tested by the
+PRs cannot publish. The release event's immutable `github.sha` is checked out and
+resolved once; a tag moved while jobs are queued cannot redirect the code being
+checked. Every check and release-validation checkout uses that SHA. Release
+validation downloads the exact immutable artifact tested by the
 Python 3.14 matrix job, rather than rebuilding it, and requires:
 
 - All supported-version checks to pass.
