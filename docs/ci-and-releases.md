@@ -1,3 +1,8 @@
+---
+title: "CI and release gates"
+description: "CI and release gates for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # CI and release gates
 
 ## Supported-version evidence

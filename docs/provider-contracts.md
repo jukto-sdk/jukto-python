@@ -1,3 +1,8 @@
+---
+title: "Provider contract audit"
+description: "Provider contract audit for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # Provider contract audit
 
 Audit date: **2026-10-10**. Verification means comparison with retrievable official documentation, not a live API transaction. No credentials, SMS submissions, shipment creation, or captured production responses were used. Unknown means unresolved, not supported by inference from existing mocks or third-party wrappers.

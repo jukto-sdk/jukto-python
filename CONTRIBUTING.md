@@ -45,3 +45,27 @@ Report security issues privately using SECURITY.md. Regular bug reports should u
 the sanitized issue template. Maintainers review contributions; a merged change
 is not authorization to publish a release. Release/OIDC and external publisher
 requirements are documented in the CI and releases guide.
+
+## Documentation identity and discoverability
+
+Use **Jukto (যুক্ত)** for the project and **Jukto Python SDK** for the Python
+package documentation. Preserve author attribution to **Mehedi H Faysal** and
+link to https://mahdiblogs.com. Keep provider names consistent with the contract
+matrix, and distinguish released clients from planned ecosystem integrations.
+
+Each documentation page should have a descriptive `title` and a unique,
+accurate `description` in YAML front matter. Lead integration guides with the
+problem solved and supported capabilities; retain verification limitations near
+examples. Link related guides, API references and contract evidence naturally.
+Do not add unsupported production claims, fabricated endorsements, keyword
+lists in prose or ratings in structured data.
+
+Run `python -m mkdocs build --strict` after editing documentation or the theme
+in `docs/overrides/`. Check rendered canonical URLs, Open Graph metadata and
+homepage JSON-LD. MkDocs generates `sitemap.xml` using `site_url`; update that
+setting and verify redirects if the documentation moves. Search indexing and AI
+citations are outcomes to monitor, not promises made by this metadata.
+
+README and package metadata changes reach existing GitHub documentation when
+merged; PyPI distribution metadata changes require a new version and release.
+Never overwrite or retag an existing published version to update its description.

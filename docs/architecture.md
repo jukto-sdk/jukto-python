@@ -1,3 +1,8 @@
+---
+title: "Architecture and resource ownership"
+description: "Architecture and resource ownership for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # Architecture and resource ownership
 
 Base provider interfaces separate application contracts from provider adapters.

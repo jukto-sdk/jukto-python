@@ -1,3 +1,8 @@
+---
+title: "Errors, privacy and reconciliation"
+description: "Errors, privacy and reconciliation for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # Errors, privacy and reconciliation
 
 Catch `JuktoError` for recognized SDK errors. Known provider failures receive

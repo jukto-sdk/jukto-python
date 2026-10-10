@@ -1,3 +1,8 @@
+---
+title: "Logistics API"
+description: "Logistics API for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # Logistics API
 
 ::: jukto.interfaces.logistics.Parcel

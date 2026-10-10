@@ -1,3 +1,8 @@
+---
+title: "SMS API"
+description: "SMS API for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # SMS API
 
 ::: jukto.interfaces.sms.BaseSMSProvider

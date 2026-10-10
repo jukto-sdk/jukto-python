@@ -1,3 +1,8 @@
+---
+title: "SSLCOMMERZ hosted payment contract audit"
+description: "SSLCOMMERZ hosted payment contract audit for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # SSLCOMMERZ hosted payment contract audit
 
 Checked **2026-10-10** against the [official v4 specification](https://developer.sslcommerz.com/doc/v4/),

@@ -1,3 +1,8 @@
+---
+title: "Payment API (experimental alpha)"
+description: "Payment API (experimental alpha) for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+---
+
 # Payment API (experimental alpha)
 
 ::: jukto.interfaces.payments.BasePaymentProvider
