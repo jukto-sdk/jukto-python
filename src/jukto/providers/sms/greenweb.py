@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, NoReturn
 from json import JSONDecodeError
 import httpx
 from jukto._responses import unexpected
@@ -19,10 +19,13 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.sms import BaseSMSProvider
 from jukto.logger import logger
+from jukto._operations import operation
 
 
 class GreenWebClient(BaseSMSProvider):
     """Adapter for GreenWeb SMS API."""
+
+    provider_name = "GreenWeb"
 
     DEFAULT_URL = "https://api.greenweb.com.bd/api.php"
 
@@ -47,7 +50,7 @@ class GreenWebClient(BaseSMSProvider):
             limits=limits,
         )
 
-    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
+    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> NoReturn:
         """Map httpx.HTTPStatusError to normalized Jukto exceptions."""
         status_code = exc.response.status_code
         text = exc.response.text.strip()
@@ -143,7 +146,7 @@ class GreenWebClient(BaseSMSProvider):
 
         # Historical plain errors retained only as anchored prefixes, not whole-body substrings.
         lower = raw_text.lower()
-        error_type = None
+        error_type: Optional[type[ProviderError]] = None
         if lower.startswith(("invalid token", "token not found")):
             error_type = ProviderAuthenticationError
         elif lower.startswith(("sms rate is greater than your account balance", "sms rate exceeds account balance", "insufficient balance")):
@@ -159,12 +162,14 @@ class GreenWebClient(BaseSMSProvider):
             )
         raise unexpected(response, "GreenWeb", raw_text)
 
+    @operation
     def send_sms(self, phone_numbers: str | list[str], message: str) -> dict[str, Any] | list[Any] | str:
         if isinstance(phone_numbers, list):
             to_string = ",".join(phone_numbers)
         else:
             to_string = phone_numbers
 
+        assert self.base_url is not None
         payload = {
             "token": self.api_key,
             "to": to_string,

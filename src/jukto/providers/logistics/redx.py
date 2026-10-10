@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, NoReturn
 from decimal import Decimal
 import httpx
 from jukto._responses import decode_json, error_body, require_object, unexpected
@@ -20,12 +20,15 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.logger import logger
-from jukto._shipments import validate_parcel, require_text, require_id, require_number
+from jukto._operations import operation
+from jukto._shipments import wire_amount, resolve_options, require_money, validate_parcel, require_text, require_id, require_number
 from jukto.exceptions import JuktoValidationError
 
 
 class RedXClient(BaseLogisticsProvider):
     """Adapter for RedX Logistics API."""
+
+    provider_name = "RedX"
 
     PRODUCTION_URL = "https://openapi.redx.com.bd/v1.0.0-beta"
     SANDBOX_URL = "https://sandbox.redx.com.bd/v1.0.0-beta"
@@ -57,7 +60,7 @@ class RedXClient(BaseLogisticsProvider):
             "Accept": "application/json",
         }
 
-    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
+    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> NoReturn:
         status_code = exc.response.status_code
         body = error_body(exc.response)
 
@@ -165,7 +168,7 @@ class RedXClient(BaseLogisticsProvider):
             response.raise_for_status()
             data = require_object(decode_json(response, "RedX"), response, "RedX")
             self._handle_inline_errors(data)
-            content = data.get("tracking_id") if method == "POST" else data.get("tracking")
+            content = data.get("tracking_id") if method == "POST" else data.get("parcel") if "/parcel/info/" in endpoint else data.get("tracking")
             if method == "POST":
                 valid = isinstance(content, (str, int)) and not isinstance(content, bool) and bool(content)
             else:
@@ -189,12 +192,14 @@ class RedXClient(BaseLogisticsProvider):
                 provider="RedX",
             ) from None
 
+    @operation
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
+        parcel = resolve_options(parcel, self.provider_name)
         validate_parcel(parcel, "RedX")
         require_text(self.api_key, "api_key", "RedX")
         require_text(parcel.redx_delivery_area, "redx_delivery_area", "RedX")
         require_id(parcel.redx_delivery_area_id, "redx_delivery_area_id", "RedX")
-        require_number(parcel.declared_value, "declared_value", "RedX")
+        require_money(parcel.declared_value, "declared_value", "RedX")
         if parcel.redx_pickup_store_id is not None:
             require_id(parcel.redx_pickup_store_id, "redx_pickup_store_id", "RedX")
         grams = Decimal(str(parcel.item_weight)) * 1000
@@ -208,15 +213,20 @@ class RedXClient(BaseLogisticsProvider):
             "delivery_area_id": parcel.redx_delivery_area_id,
             "customer_address": parcel.recipient_address,
             "merchant_invoice_id": parcel.invoice_id,
-            "cash_collection_amount": parcel.cod_amount,
+            "cash_collection_amount": wire_amount(parcel.cod_amount, "RedX"),
             "parcel_weight": int(grams),
             "instruction": parcel.note or "",
-            "value": parcel.declared_value,
+            "value": wire_amount(parcel.declared_value, "RedX"),
         }
         if parcel.redx_pickup_store_id is not None:
             payload["pickup_store_id"] = parcel.redx_pickup_store_id
         return self._request("POST", endpoint, json=payload)
 
+    @operation
     def check_status(self, consignment_id: str) -> dict[str, Any]:
         endpoint = f"{self.base_url}/parcels/tracking/{consignment_id}"
         return self._request("GET", endpoint)
+
+    @operation
+    def _status_payload(self, consignment_id: str) -> dict[str, Any]:
+        return self._request("GET", f"{self.base_url}/parcel/info/{consignment_id}")

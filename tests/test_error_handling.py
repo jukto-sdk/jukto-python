@@ -36,6 +36,7 @@ class TestSteadfastErrorHandling(unittest.TestCase):
     def test_authentication_error_401(self, mock_request):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 401
+        mock_response.headers = {}
         mock_response.json.return_value = {"status": 401, "message": "Invalid API Key"}
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "Unauthorized", request=MagicMock(), response=mock_response
@@ -53,6 +54,7 @@ class TestSteadfastErrorHandling(unittest.TestCase):
     def test_invalid_request_400(self, mock_request):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 400
+        mock_response.headers = {}
         mock_response.json.return_value = {"status": 400, "message": "Phone number is invalid"}
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "Bad Request", request=MagicMock(), response=mock_response
@@ -70,6 +72,7 @@ class TestSteadfastErrorHandling(unittest.TestCase):
     def test_resource_not_found_404(self, mock_request):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 404
+        mock_response.headers = {}
         mock_response.json.return_value = {"status": 404, "message": "Consignment not found"}
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "Not Found", request=MagicMock(), response=mock_response
@@ -83,6 +86,7 @@ class TestSteadfastErrorHandling(unittest.TestCase):
     def test_server_error_500(self, mock_request):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 500
+        mock_response.headers = {}
         mock_response.json.side_effect = JSONDecodeError("Not JSON", "", 0)
         mock_response.text = "Internal Server Error"
         mock_response.reason_phrase = "Internal Server Error"
@@ -105,6 +109,7 @@ class TestSteadfastErrorHandling(unittest.TestCase):
     def test_inline_error_status_in_200(self, mock_request):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 200
+        mock_response.headers = {}
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
             "status": 400,
@@ -126,6 +131,7 @@ class TestGreenWebErrorHandling(unittest.TestCase):
     def test_invalid_token_text_response(self, mock_post):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 200
+        mock_response.headers = {}
         mock_response.raise_for_status.return_value = None
         mock_response.text = "Invalid Token"
         mock_response.json.side_effect = JSONDecodeError("Not JSON", "", 0)
@@ -141,6 +147,7 @@ class TestGreenWebErrorHandling(unittest.TestCase):
     def test_insufficient_balance(self, mock_post):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 200
+        mock_response.headers = {}
         mock_response.raise_for_status.return_value = None
         mock_response.text = "SMS rate is greater than your account balance"
         mock_response.json.side_effect = JSONDecodeError("Not JSON", "", 0)
@@ -154,6 +161,7 @@ class TestGreenWebErrorHandling(unittest.TestCase):
     def test_http_status_error_500(self, mock_post):
         mock_response = MagicMock(spec=httpx.Response)
         mock_response.status_code = 500
+        mock_response.headers = {}
         mock_response.text = "Server Error"
         mock_response.reason_phrase = "Internal Server Error"
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(

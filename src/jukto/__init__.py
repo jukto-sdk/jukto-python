@@ -20,7 +20,8 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.interfaces.sms import BaseSMSProvider
-from jukto.results import SMSBatchResult
+from jukto.results import SMSBatchResult, Outcome, ShipmentCreationResult, ShipmentStatusResult, SMSRecipientResult, SMSSubmissionResult
+from jukto.options import PathaoOptions, RedXOptions, ProviderCapabilities
 from jukto.logger import enable_debug_logging, logger
 from jukto.providers.logistics.pathao import PathaoClient
 from jukto.providers.logistics.redx import RedXClient
@@ -34,6 +35,8 @@ __all__ = [
     "BaseLogisticsProvider",
     "BaseSMSProvider",
     "Parcel",
+    "Outcome", "ShipmentCreationResult", "ShipmentStatusResult",
+    "SMSRecipientResult", "SMSSubmissionResult", "PathaoOptions", "RedXOptions", "ProviderCapabilities",
     # Logistics Providers
     "SteadfastClient",
     "PathaoClient",

@@ -5,6 +5,7 @@ import httpx
 from threading import RLock
 from typing import Any
 from jukto.exceptions import JuktoConfigurationError
+from jukto._operations import before_request, after_response
 
 
 def validate_endpoint(url: str, allow_insecure_http: bool = False) -> None:
@@ -64,7 +65,10 @@ class SyncTransport:
         kwargs['follow_redirects'] = False
         kwargs['timeout'] = self.timeout
         kwargs['auth'] = None
-        return client.request(method, url, **kwargs)
+        before_request(method, url)
+        response = client.request(method, url, **kwargs)
+        after_response(response)
+        return response
 
     def close(self) -> None:
         with self._lock:
@@ -77,6 +81,7 @@ class SyncTransport:
 
 class TransportLifecycle:
     """Lifecycle surface shared by synchronous provider contracts."""
+    _transport: SyncTransport
 
     def close(self) -> None:
         self._transport.close()

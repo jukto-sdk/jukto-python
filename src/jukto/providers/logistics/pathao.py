@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 import math
 from threading import RLock
-from typing import Any, Optional
+from typing import Any, Optional, NoReturn
 import httpx
 from jukto._responses import decode_json, error_body, require_object, unexpected
 from jukto._transport import validate_endpoint
@@ -22,7 +22,8 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.logistics import BaseLogisticsProvider, Parcel
 from jukto.logger import logger
-from jukto._shipments import validate_parcel, require_id, require_text
+from jukto._operations import operation
+from jukto._shipments import wire_amount, resolve_options, validate_parcel, require_id, require_text
 
 
 class PathaoClient(BaseLogisticsProvider):
@@ -30,6 +31,8 @@ class PathaoClient(BaseLogisticsProvider):
 
     Implements automatic OAuth2 token issue, caching, and token refresh.
     """
+
+    provider_name = "Pathao"
 
     PRODUCTION_URL = "https://api-hermes.pathao.com"
     SANDBOX_URL = "https://courier-api-sandbox.pathao.com"
@@ -76,7 +79,7 @@ class PathaoClient(BaseLogisticsProvider):
         self._token_generation = 0
         self._refresh_margin = 60.0
 
-    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
+    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> NoReturn:
         status_code = exc.response.status_code
         body = error_body(exc.response)
 
@@ -129,7 +132,7 @@ class PathaoClient(BaseLogisticsProvider):
     def _exchange_token(self, refresh: bool) -> str:
         """Called under the token lock; publish only a fully validated response."""
         endpoint = f"{self.base_url}/aladdin/api/v1/issue-token"
-        payload = {"client_id": self.client_id, "client_secret": self.client_secret}
+        payload: dict[str, Any] = {"client_id": self.client_id, "client_secret": self.client_secret}
         if refresh:
             payload.update(grant_type="refresh_token", refresh_token=self.refresh_token)
         else:
@@ -147,7 +150,7 @@ class PathaoClient(BaseLogisticsProvider):
             data = require_object(decode_json(response, "Pathao"), response, "Pathao")
             access = data.get("access_token")
             rotation = data.get("refresh_token", self.refresh_token if refresh else None)
-            expiry = data.get("expires_in")
+            expiry: Any = data.get("expires_in")
             try:
                 ttl = float(expiry)
             except (ValueError, TypeError, OverflowError):
@@ -239,7 +242,9 @@ class PathaoClient(BaseLogisticsProvider):
                 raise ProviderConnectionError('Failed to connect to Pathao: [details withheld]', provider="Pathao") from None
         raise AssertionError("unreachable retry state")
 
+    @operation
     def create_order(self, parcel: Parcel) -> dict[str, Any]:
+        parcel = resolve_options(parcel, self.provider_name)
         validate_parcel(parcel, "Pathao")
         for name in ("client_id", "client_secret", "username", "password"):
             require_text(getattr(self, name), name, "Pathao")
@@ -264,17 +269,19 @@ class PathaoClient(BaseLogisticsProvider):
             "special_instruction": parcel.note or "",
             "item_quantity": parcel.item_quantity,
             "item_weight": parcel.item_weight,
-            "amount_to_collect": parcel.cod_amount,
+            "amount_to_collect": wire_amount(parcel.cod_amount, "Pathao"),
         }
         for name in ("recipient_city", "recipient_zone", "recipient_area"):
             if getattr(parcel, name) is not None:
                 payload[name] = getattr(parcel, name)
         return self._request("POST", endpoint, json=payload)
 
+    @operation
     def check_status(self, consignment_id: str) -> dict[str, Any]:
         endpoint = f"{self.base_url}/aladdin/api/v1/orders/{consignment_id}/info"
         return self._request("GET", endpoint)
 
+    @operation
     def get_stores(self) -> dict[str, Any]:
         """Fetch merchant store locations registered with Pathao."""
         endpoint = f"{self.base_url}/aladdin/api/v1/stores"

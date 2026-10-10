@@ -405,3 +405,102 @@ Migration: previously every operation closed its temporary pool automatically.
 Long-lived application integrations now need explicit provider shutdown or context
 management. Existing operation signatures and provider response shapes are unchanged.
 No live requests were used to test transport ownership or pooling.
+
+## Typed domain contracts and migration (task 8, 2026-10-10)
+
+The raw APIs remain compatible: create_order/check_status/send_sms keep their
+existing dictionaries, strings and lists. New create_shipment/check_shipment_status
+and submit_sms methods return ShipmentCreationResult, ShipmentStatusResult and
+SMSSubmissionResult. Common fields are provider, provider ID/request ID, Outcome,
+original provider status, and raw. Outcome has ACCEPTED, DELIVERED, FAILED, PARTIAL
+and UNKNOWN. Results are frozen containers, but raw data is neither copied nor
+sanitized; it can contain personal information. Raw/status/recipient fields and
+submission request IDs are excluded from result repr. Use raw only in deliberate,
+access-controlled diagnostics. Provider IDs normalize string/integer IDs to strings.
+Unknown or invalid identifiers do not establish acceptance.
+
+[examples/normalized_shipments.py](https://github.com/jukto-sdk/jukto-python/blob/main/examples/normalized_shipments.py)
+is one typed consumer for all three shipment providers, with no provider-specific
+response indexing. ACCEPTED means submission/creation evidence, not delivery,
+fulfillment or payment. Pathao's maintained creation consumer and RedX's published
+tracking_id response support this inference; Steadfast creation remains UNKNOWN
+because its success contract has not been verified. All polling vocabularies remain
+UNKNOWN, including familiar strings such as Delivered: no cross-endpoint status
+mapping is assumed. Original status and IDs remain accessible for application
+policies and reconciliation. RedX's new typed status method uses its documented
+`/parcel/info/{id}` and `parcel.status`; legacy check_status keeps its prior route.
+RedX's published webhook mapped-status meanings are not assumed to certify polling
+states. This intentionally does not offer verified delivered/returned/failed
+shipment classifications yet.
+
+AlphaSMS's [published submission envelope](https://sms.bd/api) supports ACCEPTED
+and a submission request_id, with no per-recipient delivery claims. GreenWeb's
+[published recipient output](https://bdbulksms.com/bulk-sms-api-bd-english.php) supports
+SENT → ACCEPTED and FAILED → FAILED. Unrecognized entries remain UNKNOWN and mixed
+outcomes become PARTIAL. SMSBatchError preserves the original list-compatible
+results and adds normalized_result; SMSBatchResult.normalized exposes the same
+models. Recipient identities are only response-supplied `to` values; response_index
+is not an input-position correlation or resend instruction. Text-only responses
+cannot supply an independently verified recipient identity. BulkSMSBD's legacy
+202 remains UNKNOWN in the typed API. Full provenance is recorded in
+`tests/fixtures/result_contracts.json`; no live delivery was verified.
+
+### Error metadata and ambiguity
+
+JuktoError adds http_status, provider_error_code, request_id, retry_after, outcome
+and reconciliation_required. Legacy status_code remains unchanged for compatibility,
+including its historical mixture of application and HTTP codes. New code should
+use the separate fields. HTTP status comes from the final observed response;
+application codes come only from existing adapter envelopes, retaining original
+numeric/string representation. HTTP errors without such a field have no provider
+code. Request ID uses the response's X-Request-ID when supplied, and Retry-After is
+retained as the original header string, not parsed into an automatic delay. Neither
+header's presence or vendor support is guaranteed; unknown provider code semantics
+remain unknown. Header values and response bodies are excluded from exception
+str/repr. Request-local context isolates metadata between threads and clears it
+before each attempt so a final timeout cannot inherit an earlier 401's headers.
+
+When a shipment/SMS POST was attempted, a timeout, connection failure, 5xx or malformed
+response conservatively sets UNKNOWN and reconciliation_required. This flag means
+reconcile with the provider, not blindly resend or switch providers. Authentication
+exchange alone and read-only calls do not count as shipment/SMS attempts. Published
+AlphaSMS rejection codes in HTTP 200 responses establish FAILED, except server code 409 and unknown codes.
+GreenWeb batch errors expose all outcomes; unknown entries require reconciliation.
+Other vendor rejection/idempotency guarantees remain unverified and therefore do
+not clear uncertainty. A local validation/configuration error before sending does
+not require reconciliation. No automatic retry, backoff, failover or deduplication
+was added. Applications must persist operation references and provider evidence,
+query their provider/dashboard after ambiguous outcomes, and apply their own durable
+deduplication/reconciliation policies. References are not provider idempotency keys.
+
+### Options, capabilities and monetary values
+
+Parcel accepts optional PathaoOptions and RedXOptions. Typed options take precedence
+over legacy flat fields for their own provider only. PathaoOptions scopes store,
+city/zone/area and delivery/item type; RedXOptions scopes area name/ID and pickup
+store. Legacy fields still work when the corresponding options object is absent.
+capabilities describes the SDK's implemented operations/options, not production
+certification, cross-provider interchangeability or delivery-status verification.
+Only RedX exposes verified declared-value fields in the current adapter; only
+GreenWeb exposes per-recipient submission output. No geography translation occurs.
+
+Monetary input annotations accept Decimal, plus int/float for backward compatibility.
+Use Decimal constructed from a decimal string for new integrations. Validation
+compares finite, nonnegative Decimal values without converting through binary float.
+For RedX, Decimal amounts are serialized as exact fixed-point strings per the
+published create table. Existing int/float JSON number serialization is retained
+as explicit legacy compatibility. The RedX table and curl examples disagree on
+accepted number/string types; actual acceptance and monetary precision still need
+vendor confirmation. Pathao/Steadfast Decimal integers serialize as exact JSON
+integers; fractional Decimals fail locally until a lossless supported wire format
+is verified. Legacy floats retain their previous serialization and binary-float
+limitations. No currency, rounding, decimal scale or minor-unit conversion is guessed.
+Nonzero declared goods value can remain independent of zero COD.
+
+The package includes py.typed and a mypy development dependency/configuration. Run
+`python -m mypy` to check the SDK and normalized consumer example. The SMS interface
+now truthfully permits raw dictionary/list/string results; HTTP status handlers
+are annotated NoReturn. These checks do not certify every raw provider dictionary:
+the raw escape hatch deliberately uses Any. Multi-version CI, wheel installation
+checks and publication gates remain the next CI/release task (currently task 10 in
+the local checklist).

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, NoReturn
 import httpx
 from jukto._responses import decode_json, unexpected
 
@@ -19,10 +19,13 @@ from jukto.exceptions import (
 )
 from jukto.interfaces.sms import BaseSMSProvider
 from jukto.logger import logger
+from jukto._operations import operation
 
 
 class AlphaSMSClient(BaseSMSProvider):
     """Adapter for AlphaSMS (sms.net.bd) API."""
+
+    provider_name = "AlphaSMS"
 
     DEFAULT_URL = "https://api.sms.net.bd/sendsms"
 
@@ -47,7 +50,7 @@ class AlphaSMSClient(BaseSMSProvider):
             limits=limits,
         )
 
-    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
+    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> NoReturn:
         status_code = exc.response.status_code
         text = exc.response.text.strip()
         error_message = f'AlphaSMS API error ({status_code}): [details withheld]'
@@ -136,12 +139,14 @@ class AlphaSMSClient(BaseSMSProvider):
             provider="AlphaSMS",
         )
 
+    @operation
     def send_sms(self, phone_numbers: str | list[str], message: str) -> dict[str, Any]:
         if isinstance(phone_numbers, list):
             to_string = ",".join(phone_numbers)
         else:
             to_string = phone_numbers
 
+        assert self.base_url is not None
         payload = {
             "api_key": self.api_key,
             "msg": message,

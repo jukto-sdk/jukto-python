@@ -8,6 +8,7 @@ and Payments).
 from __future__ import annotations
 
 from typing import Any, Optional
+from jukto.results import Outcome, SMSSubmissionResult
 
 
 class JuktoError(Exception):
@@ -24,12 +25,24 @@ class JuktoError(Exception):
         status_code: Optional[int] = None,
         response_body: Optional[Any] = None,
         provider: Optional[str] = None,
+        http_status: Optional[int] = None,
+        provider_error_code: Optional[int | str] = None,
+        request_id: Optional[str] = None,
+        retry_after: Optional[str] = None,
+        outcome: Outcome = Outcome.UNKNOWN,
+        reconciliation_required: bool = False,
     ) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
         self.response_body = response_body
         self.provider = provider
+        self.http_status = http_status
+        self.provider_error_code = provider_error_code
+        self.request_id = request_id
+        self.retry_after = retry_after
+        self.outcome = outcome
+        self.reconciliation_required = reconciliation_required
 
     def __str__(self) -> str:
         parts: list[str] = [self.message]
@@ -138,3 +151,4 @@ class SMSBatchError(ProviderError):
     def __init__(self, message: str, *, results: Any, **kwargs: Any) -> None:
         super().__init__(message, **kwargs)
         self.results = results
+        self.normalized_result: Optional[SMSSubmissionResult] = None

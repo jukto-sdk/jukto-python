@@ -1,0 +1,22 @@
+{
+  "verified_at": "2026-10-10",
+  "sources": {
+    "AlphaSMS": "https://sms.bd/api",
+    "GreenWeb": "https://bdbulksms.com/bulk-sms-api-bd-english.php",
+    "Pathao": "https://github.com/pathao-eng/courier-woocommerce-plugin/blob/main/plugin-api.php",
+    "RedX": "https://redx.com.bd/_next/static/chunks/pages/developer-api-fb24bbe4344e870c.js"
+  },
+  "semantics": {
+    "AlphaSMS": "error 0 means submitted; request_id is submission-level, not per-recipient delivery proof",
+    "GreenWeb": "SENT and FAILED are per-recipient submission output; response positions are not request indices",
+    "Pathao": "provider-maintained order creation consumer stores returned consignment_id; polling status vocabulary is not verified",
+    "RedX": "published Create Parcel returns tracking_id; parcel-info exposes parcel.status but exact polling vocabulary is unresolved",
+    "Steadfast": "existing consignment and delivery_status envelope retained; success/state semantics unverified",
+    "BulkSMSBD": "legacy 202 meaning remains unverified"
+  },
+  "greenweb": [
+    {"provider_status": "SENT", "normalized": "accepted"},
+    {"provider_status": "FAILED", "normalized": "failed"},
+    {"provider_status": "future-status", "normalized": "unknown"}
+  ]
+}
