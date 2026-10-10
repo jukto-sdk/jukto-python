@@ -15,6 +15,7 @@ jobs:
   check:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -24,8 +25,25 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: actions/setup-python@v6
+        if: matrix.python-version != '3.15'
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Build stable Python 3.15 until runner binaries are available
+        if: matrix.python-version == '3.15'
+        run: |
+          # Official 3.15.0 source and SHA-256 from python.org's release page.
+          sudo apt-get update -qq
+          sudo apt-get install -y libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev
+          cd "$RUNNER_TEMP"
+          curl --fail --location --proto '=https' --tlsv1.2 https://www.python.org/ftp/python/3.15.0/Python-3.15.0.tar.xz -o Python.tar.xz
+          echo 'ba4bed1ba346b916890b76d9e320451420aa69f6408997d33c66482eeae3d575  Python.tar.xz' | sha256sum --check
+          tar -xf Python.tar.xz
+          cd Python-3.15.0
+          ./configure --prefix="$RUNNER_TEMP/python-3.15" --with-ensurepip=install > configure.log 2>&1 || { tail -100 configure.log; exit 1; }
+          make -j2 > build.log 2>&1 || { tail -100 build.log; exit 1; }
+          make install > install.log 2>&1 || { tail -100 install.log; exit 1; }
+          ln -s python3.15 "$RUNNER_TEMP/python-3.15/bin/python"
+          echo "$RUNNER_TEMP/python-3.15/bin" >> "$GITHUB_PATH"
       - name: Install check dependencies
         run: python -m pip install '.[dev]'
       - name: Lint

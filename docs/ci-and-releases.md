@@ -12,6 +12,12 @@ The Python 3.9 development extra caps mypy below 1.20: [mypy 1.19 is the last
 version runnable on Python 3.9](https://mypy.readthedocs.io/en/stable/changelog.html).
 The [official Python downloads](https://www.python.org/downloads/) listed 3.15.0
 as stable on 2026-10-10.
+GitHub's runner manifest did not yet contain stable 3.15 binaries. Its matrix job
+therefore builds the official 3.15.0 source with the SHA-256 published on the
+[release page](https://www.python.org/downloads/release/python-3150/). It runs the
+same mandatory checks, without tolerating failures or substituting a prerelease.
+Replace that temporary source-build step with setup-python once stable binaries
+are available; update the source version/checksum if a newer patch is needed.
 
 Each successful matrix job uploads `coverage-python-VERSION` (JSON and XML) and
 `distributions-python-VERSION`. Download the coverage artifact from the linked
