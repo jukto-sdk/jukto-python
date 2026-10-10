@@ -63,7 +63,7 @@ def test_adapter_logs_and_exceptions_exclude_sensitive_values(name, mode, caplog
             with pytest.raises(jukto.JuktoError) as caught:
                 invoke(c, name)
             rendered = str(caught.value) + repr(caught.value) + caught.value.message
-            rendered += ''.join(traceback.format_exception(caught.value))
+            rendered += ''.join(traceback.format_exception(type(caught.value), caught.value, caught.value.__traceback__))
             if mode == 'http_error':
                 assert ECHO in str(caught.value.response_body)
     records = '\n'.join(r.getMessage() for r in caplog.records if r.name == 'jukto')
@@ -154,6 +154,6 @@ def test_pathao_password_auth_failure_keeps_body_private(caplog):
         with pytest.raises(jukto.ProviderAuthenticationError) as caught:
             c.get_token()
     assert caught.value.response_body == {'message': ECHO}
-    rendered = caplog.text + ''.join(traceback.format_exception(caught.value))
+    rendered = caplog.text + ''.join(traceback.format_exception(type(caught.value), caught.value, caught.value.__traceback__))
     for secret in SECRETS:
         assert secret not in rendered

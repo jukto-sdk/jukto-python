@@ -4,7 +4,9 @@
 > *Architected and maintained by [Mehedi Hasan Faysal](https://github.com/MahdiBuilds), CTO of [Feather IT] - Empowering the next generation of Bangladeshi developers.*
 
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)](#running-tests)
+[![CI](https://github.com/jukto-sdk/jukto-python/actions/workflows/ci.yml/badge.svg)](https://github.com/jukto-sdk/jukto-python/actions/workflows/ci.yml)
+
+Measured coverage reports and the release gates are described in [CI and releases](docs/ci-and-releases.md).
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Jukto is a modern, unified, open-source Python SDK designed to seamlessly connect Bangladesh's fragmented third-party APIs (Logistics, SMS, Payments) into a single, elegant, and strictly typed interface. 

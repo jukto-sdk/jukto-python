@@ -15,3 +15,8 @@ site/
 LAUNCH_PLAYBOOK.md
 REVIEW_PROMPT_ASTRA.md
 IMPLEMENTATION_TODO.md
+# Generated quality-check output
+coverage.xml
+coverage.json
+.mypy_cache/
+.ruff_cache/
