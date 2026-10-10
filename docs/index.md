@@ -1,24 +1,39 @@
-# Jukto (যুক্ত) Python SDK
+# Jukto Python SDK
 
-**The absolute gold standard Python SDK for Bangladesh's Digital Ecosystem.**
+Jukto is an open-source synchronous SDK for Bangladesh SMS and logistics APIs,
+created by [Mehedi Hasan Faysal](https://github.com/MahdiBuilds), CTO of Feather IT.
+It provides shared interfaces, typed domain results and classifications for known
+provider failures. Raw responses remain available, and unverified behavior stays
+explicit in the [contract matrix](provider-contracts.md).
 
-Architected and maintained by [Mehedi Hasan Faysal](https://github.com/MahdiBuilds), CTO of **Feather IT**, this open-source project is built to empower the next generation of Bangladeshi developers.
+Adapters currently cover Steadfast, Pathao, RedX, GreenWeb, AlphaSMS and BulkSMSBD.
+Payments and native asynchronous clients are planned, not available. Provider
+switching requires account/configuration and capability changes; typed models do
+not erase provider-specific requirements or certify delivery semantics.
 
-## What is Jukto?
+## Install
 
-Jukto is an open-source Python library that standardizes API integrations for Bangladeshi services like Steadfast Courier, Pathao Courier, RedX, GreenWeb SMS, and BulkSMSBD.
+```bash
+python -m pip install jukto
+```
 
-Instead of writing 10 different API clients for 10 different Bangladeshi providers, you write **one logic**. Jukto translates it into the appropriate API calls for the provider you choose.
+For the current unreleased source and optional framework examples, clone the
+repository, activate a virtual environment and install `-e '.[dev,examples]'`.
+See [contributing](contributing.md) for the exact commands.
 
-## Why use Jukto?
+## Offline quickstart
 
-1. **Zero-Friction Switching:** Change from Steadfast to Pathao by changing a single line of code. Jukto uses a strict Strategy Pattern to keep contracts uniform.
-2. **Normalized Errors:** Bangladesh's APIs have quirks. Sometimes they return `200 OK` with `{"status": "error"}`. Sometimes they return `500` with text. Jukto normalizes everything into a unified exception hierarchy (`ProviderAuthenticationError`, `InsufficientBalanceError`, etc.).
-3. **Built for Scale:** Whether you use Django, FastAPI, or Flask, Jukto is fully typed and ready for production logic.
+Run `python -m examples.offline_quickstart` from the checkout. This source is
+included directly and tested by pytest; it uses synthetic credentials and an
+HTTPX MockTransport, so no provider connection occurs.
 
-## Meet the Architect
+```python
+--8<-- "examples/offline_quickstart.py"
+```
 
-This library is a testament to the open-source engineering community in Bangladesh. It was created and architected by **Mehedi Hasan Faysal**.
+Output is `accepted`, meaning submission acceptance, not delivery. For real
+operations, obtain your own account configuration, read the provider's current
+specification and preserve unknown/partial results before deciding to retry.
 
-> "Our goal at Feather IT isn't just to build software, it's to elevate the entire engineering standard in Bangladesh. Jukto eliminates redundant, messy integration code so Bangladeshi engineers can focus on building world-class products." 
-> — *Mehedi Hasan Faysal*
+Continue with [logistics](guides/logistics.md), [SMS](guides/sms.md),
+[framework examples](guides/frameworks.md) and [error handling](guides/errors.md).

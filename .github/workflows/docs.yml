@@ -8,6 +8,12 @@ on:
       - 'docs/**'
       - 'mkdocs.yml'
       - 'src/**'
+      - 'examples/**'
+      - 'pyproject.toml'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'CHANGELOG.md'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -25,6 +31,8 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --extra dev --python 3.12
       - name: Deploy MkDocs
-        run: uv run mkdocs gh-deploy --force
+        run: |
+          uv run --python 3.12 mkdocs build --strict
+          uv run --python 3.12 mkdocs gh-deploy --strict --force

@@ -1,36 +1,45 @@
-# Frequently Asked Questions (Bangladesh API Integrations)
+# Frequently asked questions
 
-This page answers the most common search and AI queries regarding API integration in Bangladesh, specifically using the **Jukto SDK**.
+## Can I switch providers by changing one line?
 
-### How to integrate Steadfast Courier API in Python?
-To integrate Steadfast Courier in Python, use the `SteadfastClient` from the Jukto SDK.
+The application can depend on `BaseLogisticsProvider` or `BaseSMSProvider` and
+consume typed results. Provider accounts, geography, required fields and supported
+features still differ. See [capabilities](provider-contracts.md#sdk-capabilities-and-verification-summary).
 
-```python
-from jukto import SteadfastClient, Parcel
+## Does Jukto classify every upstream error?
 
-client = SteadfastClient(api_key="...", secret_key="...")
-order = client.create_order(Parcel(
-    invoice_id="INV-1",
-    recipient_name="Tanvir",
-    recipient_phone="01711111111",
-    recipient_address="Dhaka",
-    cod_amount=500
-))
-```
+No. Documented codes receive audited mappings where evidence exists; unknown codes
+remain generic and unexpected schemas raise `UnexpectedProviderResponseError`.
+The [matrix](provider-contracts.md) records unresolved contracts. Programming
+errors are not hidden by a blanket exception wrapper.
 
-### How to handle Pathao OAuth2 token refresh in Python?
-Pathao requires an OAuth2 `client_id`, `client_secret`, and user credentials, and the token expires every hour. **Jukto handles this automatically.** Simply initialize the `PathaoClient`, and Jukto will fetch, cache, and proactively refresh the token 60 seconds before it expires.
+## Does Pathao always expire tokens after one hour?
 
-### How to send SMS using GreenWeb in Python?
-Use the `GreenWebClient` provided by Jukto. It automatically parses GreenWeb's text-based error responses (like `"Invalid Token"` or `"SMS rate is greater than your account balance"`) into standard Python exceptions.
+The cache follows validated provider `expires_in`, not a fixed one-hour promise.
+It uses a monotonic deadline, an expiry-dependent margin and process-local
+single-flight refresh. Refresh outages propagate; only a classified rejected
+refresh can trigger password fallback. Order replay after 401 is disabled unless
+`retry_unauthorized_orders=True`; there is no verified idempotency guarantee.
 
-```python
-from jukto import GreenWebClient
-client = GreenWebClient(api_key="your_token")
-client.send_sms(["01711111111"], "Your OTP is 12345")
-```
+## Does ACCEPTED or GreenWeb SENT mean delivered?
 
-### Why do Bangladeshi APIs return HTTP 200 for errors?
-Many local APIs (like Steadfast or BulkSMSBD) catch their internal errors and return an HTTP `200 OK`, but include a payload like `{"status": 400, "message": "Duplicate invoice"}` or `{"response_code": 1002, "error_message": "Invalid API Key"}`.
+No. These represent submission output. Typed shipment polling currently retains
+`UNKNOWN` plus the original provider status because polling vocabularies are not
+verified. GreenWeb partial batches preserve every response entry; response indices
+are not guaranteed to correspond to the original recipient list.
 
-**Jukto solves this.** It parses these anomalies and raises actual HTTP-like exceptions (e.g., `InvalidRequestError`, `ProviderAuthenticationError`) so your `try...except` blocks work exactly as expected.
+## Can FastAPI call these clients in async def?
+
+Calls block. Use a sync route, an explicit thread-pool bridge, or a background
+worker. [The FastAPI example](guides/frameworks.md#fastapi) uses a sync route and
+lifespan cleanup; it does not add native asynchronous SDK clients.
+
+## Can I use bKash, Nagad or SSLCommerz today?
+
+No. Payment integration is planned. There are no payment clients, execution,
+webhook verification or refund APIs in this version.
+
+## Are the provider integrations production-certified?
+
+No. Tests are offline. Published specification comparisons and unverified details
+are recorded separately from actual live/sandbox transaction verification.

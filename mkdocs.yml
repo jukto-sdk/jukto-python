@@ -1,5 +1,5 @@
 site_name: Jukto Python SDK
-site_description: The gold standard Python SDK for integrating Bangladesh's payment, SMS, and logistics APIs (bKash, Pathao, Steadfast, RedX, GreenWeb). Architected by Mehedi Hasan Faysal.
+site_description: Synchronous Python SDK for Bangladesh SMS and logistics APIs. Payments and native async support are planned. Created by Mehedi Hasan Faysal.
 site_author: Mehedi Hasan Faysal
 site_url: https://jukto-sdk.github.io/jukto-python/
 
@@ -8,8 +8,8 @@ repo_url: https://github.com/jukto-sdk/jukto-python
 
 theme:
   name: material
-  logo: material/api
-  favicon: material/api
+  icon:
+    logo: material/api
   palette:
     - scheme: default
       primary: indigo
@@ -43,9 +43,16 @@ nav:
   - Integration Guides:
     - Courier / Logistics API (Bangladesh): guides/logistics.md
     - SMS Gateways (Bangladesh): guides/sms.md
+    - Django, FastAPI and Testing: guides/frameworks.md
   - Exception Handling: guides/errors.md
   - FAQ (AEO & BD Context): faq.md
   - Architecture: architecture.md
+  - Provider Contracts and Capabilities: provider-contracts.md
+  - CI and Releases: ci-and-releases.md
+  - Compatibility and Migration: compatibility.md
+  - Contributing: contributing.md
+  - Security: security.md
+  - Changelog: changelog.md
   - API Reference:
     - Logistics Providers: api/logistics.md
     - SMS Providers: api/sms.md
@@ -57,7 +64,9 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      base_path: ['.']
+      check_paths: true
   - pymdownx.superfences
   - admonition
   - def_list

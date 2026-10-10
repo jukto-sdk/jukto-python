@@ -45,13 +45,15 @@ jobs:
           ln -s python3.15 "$RUNNER_TEMP/python-3.15/bin/python"
           echo "$RUNNER_TEMP/python-3.15/bin" >> "$GITHUB_PATH"
       - name: Install check dependencies
-        run: python -m pip install '.[dev]'
+        run: python -m pip install '.[dev,examples]'
       - name: Lint
         run: python -m ruff check .
       - name: Type check
         run: python -m mypy
       - name: Tests and branch coverage gate
         run: python -m pytest --cov-report=xml --cov-report=json --cov-report=term-missing
+      - name: Strict documentation build
+        run: python -m mkdocs build --strict
       - name: Build and validate distributions
         run: |
           python -m build

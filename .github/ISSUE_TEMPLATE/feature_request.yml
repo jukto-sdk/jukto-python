@@ -1,0 +1,21 @@
+name: Feature request
+description: Propose a concrete capability with verified provider evidence.
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, customer data or raw production responses.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Provider specification and unknowns
+      description: Link authoritative documentation and identify unresolved behavior.
+  - type: textarea
+    id: validation
+    attributes:
+      label: Offline validation and compatibility considerations

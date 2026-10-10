@@ -12,10 +12,11 @@ import jukto
 ])
 @respx.mock
 def test_one_shipment_consumer_without_provider_dict_indexing(factory,payload,sample_parcel):
+    from examples.normalized_shipments import submit_shipment
     c=factory()
     respx.post(c.base_url+'/aladdin/api/v1/issue-token').respond(200,json={'access_token':'token','expires_in':3600})
     respx.route().respond(200,json=payload)
-    result=c.create_shipment(sample_parcel)
+    result=submit_shipment(c,sample_parcel)
     assert isinstance(result,jukto.ShipmentCreationResult)
     assert result.provider_id in ('P1','R1','42')
     assert result.raw==payload

@@ -4,10 +4,13 @@
 
 `checks.yml` is shared by pull requests, pushes to main, and release checks. It runs
 correctness lint (Ruff E9/F63/F7/F82), mypy, the complete offline pytest suite,
-branch coverage, distribution build, strict Twine metadata checks, and wheel-only
+branch coverage, strict documentation build, distribution build, strict Twine metadata checks, and wheel-only
 smoke checks on Python **3.9 through 3.15**. The package's `>=3.9` requirement is
 preserved; future Python versions require adding a matrix entry and verification.
 Python 3.9/3.10 are retained for compatibility despite upstream end of life.
+Check jobs install `.[dev,examples]` so the Django/FastAPI offline request examples
+and their type checks cannot be skipped due to absent optional dependencies. The
+frameworks remain optional; the installed SDK wheel depends only on HTTPX.
 The Python 3.9 development extra caps mypy below 1.20: [mypy 1.19 is the last
 version runnable on Python 3.9](https://mypy.readthedocs.io/en/stable/changelog.html).
 The [official Python downloads](https://www.python.org/downloads/) listed 3.15.0

@@ -1,0 +1,41 @@
+name: Sanitized bug report
+description: Report an SDK bug using synthetic data and offline evidence.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include API keys, passwords, tokens, OTPs, phone numbers, addresses,
+        real operation IDs or unsanitized logs/responses. Use synthetic data.
+        Report vulnerabilities privately as described in SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: SDK version or commit and Python version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal offline reproduction
+      description: Use MockTransport/respx or a fake provider; no live transactions.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Include sanitized exception class/status and relevant configuration.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Authoritative contract evidence, if relevant
+      description: Link the official specification with a date; distinguish it from mocked output.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, personal data and unsanitized provider evidence.
+          required: true

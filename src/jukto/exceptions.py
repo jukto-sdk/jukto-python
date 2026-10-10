@@ -1,8 +1,7 @@
 """Custom exception hierarchy for Jukto SDK.
 
-This module provides normalized, domain-specific exceptions for all errors
-encountered when interacting with Bangladesh's API providers (Logistics, SMS,
-and Payments).
+Normalized exceptions for recognized SDK and logistics/SMS provider failures.
+Unknown provider codes remain generic; internal programming errors can escape.
 """
 
 from __future__ import annotations
@@ -68,7 +67,7 @@ class JuktoValidationError(JuktoError):
     """Raised when client-side validation fails before sending a request.
 
     Examples:
-        - Invalid Bangladeshi phone number format
+        - Empty required shipment phone string (no numbering-plan validation)
         - Missing required parcel or order fields
         - Negative COD amount
     """

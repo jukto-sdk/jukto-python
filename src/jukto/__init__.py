@@ -1,4 +1,4 @@
-"""Jukto - A unified Python SDK for Bangladesh's digital ecosystem (Logistics, SMS, Payments)."""
+"""Synchronous Bangladesh logistics/SMS SDK; payments and native async are planned."""
 
 from __future__ import annotations
 

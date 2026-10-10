@@ -2,6 +2,11 @@
 
 Audit date: **2026-10-10**. Verification means comparison with retrievable official documentation, not a live API transaction. No credentials, SMS submissions, shipment creation, or captured production responses were used. Unknown means unresolved, not supported by inference from existing mocks or third-party wrappers.
 
+The numbered task sections are historical snapshots; their progress statements
+describe that task's completion point. The latest capability/verification summary
+appears at the end of this page. Later SDK changes do not retroactively establish
+unverified upstream contracts.
+
 ## Evidence and current implementation matrix
 
 Paths below are relative to the base URL. Unless explicitly marked verified, these are **implementation inventory**, not claims about upstream behavior. Last independently verified date is “unverified” where no authoritative specification was retrieved.
@@ -504,3 +509,25 @@ are annotated NoReturn. These checks do not certify every raw provider dictionar
 the raw escape hatch deliberately uses Any. Multi-version CI, wheel installation
 checks and publication gates remain the next CI/release task (currently task 10 in
 the local checklist).
+
+## SDK capabilities and verification summary
+
+This summary describes implemented methods, not independently certified provider
+behavior. Detailed evidence and dates are in the table above and task audit notes.
+All clients are synchronous; payments, delivery receipt processors and generic
+side-effect retries are not implemented.
+
+| Provider | SDK operations/options | Normalized semantics and unresolved contracts |
+| --- | --- | --- |
+| Steadfast | Shipment creation/status | Creation and polling UNKNOWN; endpoint/schema and status vocabulary unverified |
+| Pathao | Shipment creation/status, store/geography options, process-local OAuth lifecycle | Creation with ID ACCEPTED; polling UNKNOWN; provider-maintained DTO evidence supports omission of absent geography, but full error/status/replay guarantees remain unverified |
+| RedX | Shipment creation/status, area options, declared value | Documented create fields/auth and typed parcel-info path; creation with ID ACCEPTED, polling UNKNOWN; exact weight units/types, Decimal wire acceptance and legacy raw tracking unresolved |
+| AlphaSMS | SMS submission | Published code 0 plus request ID ACCEPTED; audited failure codes; no delivery confirmation API |
+| GreenWeb | SMS submission and per-response-entry outcomes | SENT is ACCEPTED submission; FAILED/unknown preserved; partial batches raise SMSBatchError; request/response ordering and legacy standalone text-error mappings unresolved |
+| BulkSMSBD | Legacy SMS submission | Legacy code 202 UNKNOWN; application-code meanings and HTTPS POST support unresolved; default HTTP refused |
+
+`provider.capabilities` exposes SDK method availability, including shipment/SMS,
+per-recipient submission, geography options and declared value. It does not certify
+provider constraints, routing validity, delivery status or idempotency. See the
+[logistics guide](guides/logistics.md) and [SMS guide](guides/sms.md) before adopting
+these capabilities in an application.
