@@ -1,7 +1,7 @@
-# Hosted payments (unreleased)
+# Hosted payments (experimental alpha)
 
-The source tree adds `SSLCommerzClient` and `AsyncSSLCommerzClient` for one scoped
-hosted checkout integration. It has not been published by this task. Read the
+The 0.1.0a1 alpha includes `SSLCommerzClient` and `AsyncSSLCommerzClient` for one
+experimental hosted checkout integration. Publication is pending. Read the
 [contract audit](../payment-contracts.md) before using it: BDT, non-physical goods,
 no shipping/EMI, and no live/sandbox transaction certification. Standalone bKash
 and Nagad remain planned.

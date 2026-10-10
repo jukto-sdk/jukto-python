@@ -17,24 +17,27 @@ def gate():
     return module
 
 
-def artifacts(tmp_path, version="0.1.0", typed=True):
+VERSION = gate().tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
+
+
+def artifacts(tmp_path, version=VERSION, typed=True):
     with zipfile.ZipFile(tmp_path / "jukto.whl", "w") as wheel:
-        wheel.writestr("jukto-0.1.0.dist-info/METADATA", f"Name: jukto\nVersion: {version}\n")
+        wheel.writestr(f"jukto-{version}.dist-info/METADATA", f"Name: jukto\nVersion: {version}\n")
         if typed:
             wheel.writestr("jukto/py.typed", "")
     with tarfile.open(tmp_path / "jukto.tar.gz", "w:gz") as archive:
         body = f"Name: jukto\nVersion: {version}\n".encode()
-        info = tarfile.TarInfo("jukto-0.1.0/PKG-INFO")
+        info = tarfile.TarInfo(f"jukto-{VERSION}/PKG-INFO")
         info.size = len(body)
         archive.addfile(info, io.BytesIO(body))
     return tmp_path
 
 
 def test_validated_release_artifacts(tmp_path):
-    gate().validate(ROOT / "pyproject.toml", artifacts(tmp_path), "v0.1.0")
+    gate().validate(ROOT / "pyproject.toml", artifacts(tmp_path), f"v{VERSION}")
 
 
-@pytest.mark.parametrize("tag", ["v0.2.0", "main", "0.1.0", "v0.1.0;echo unsafe"])
+@pytest.mark.parametrize("tag", [f"v{VERSION}.post1", "main", VERSION, f"v{VERSION};echo unsafe"])
 def test_wrong_tag_is_rejected(tmp_path, tag):
     with pytest.raises(ValueError, match="tag"):
         gate().validate(ROOT / "pyproject.toml", artifacts(tmp_path), tag)
@@ -42,17 +45,17 @@ def test_wrong_tag_is_rejected(tmp_path, tag):
 
 def test_stale_artifact_version_is_rejected(tmp_path):
     with pytest.raises(ValueError, match="version"):
-        gate().validate(ROOT / "pyproject.toml", artifacts(tmp_path, "0.0.9"), "v0.1.0")
+        gate().validate(ROOT / "pyproject.toml", artifacts(tmp_path, "0.0.9"), f"v{VERSION}")
 
 
 def test_untyped_wheel_is_rejected(tmp_path):
     with pytest.raises(ValueError, match="py.typed"):
-        gate().validate(ROOT / "pyproject.toml", artifacts(tmp_path, typed=False), "v0.1.0")
+        gate().validate(ROOT / "pyproject.toml", artifacts(tmp_path, typed=False), f"v{VERSION}")
 
 
 def test_missing_distribution_is_rejected(tmp_path):
     with pytest.raises(ValueError, match="wheel and sdist"):
-        gate().validate(ROOT / "pyproject.toml", tmp_path, "v0.1.0")
+        gate().validate(ROOT / "pyproject.toml", tmp_path, f"v{VERSION}")
 
 
 def test_publication_requires_checks_and_build():
@@ -75,18 +78,18 @@ def test_sdist_alone_has_wrong_version(tmp_path):
     artifacts(tmp_path)
     with tarfile.open(tmp_path / "jukto.tar.gz", "w:gz") as archive:
         body = b"Name: jukto\nVersion: 0.0.9\n"
-        info = tarfile.TarInfo("jukto-0.1.0/PKG-INFO")
+        info = tarfile.TarInfo(f"jukto-{VERSION}/PKG-INFO")
         info.size = len(body)
         archive.addfile(info, io.BytesIO(body))
     with pytest.raises(ValueError, match="version"):
-        gate().validate(ROOT / "pyproject.toml", tmp_path, "v0.1.0")
+        gate().validate(ROOT / "pyproject.toml", tmp_path, f"v{VERSION}")
 
 
 def test_duplicate_wheels_are_rejected(tmp_path):
     artifacts(tmp_path)
     (tmp_path / "stale.whl").write_bytes((tmp_path / "jukto.whl").read_bytes())
     with pytest.raises(ValueError, match="wheel and sdist"):
-        gate().validate(ROOT / "pyproject.toml", tmp_path, "v0.1.0")
+        gate().validate(ROOT / "pyproject.toml", tmp_path, f"v{VERSION}")
 
 
 def test_supported_versions_receive_all_checks():

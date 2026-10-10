@@ -43,7 +43,7 @@ the exception and its impact. Do not silently discard unknown upstream states.
 
 Consult [the audit](provider-contracts.md) for exact evidence and open contracts.
 
-## Native async (unreleased)
+## Native async (0.1.0a1 alpha)
 
 `Async*Client` classes are additive. Await operations and use `async with` or
 `aclose()`; inject `httpx.AsyncClient`, not `httpx.Client`. Sync APIs retain their
@@ -51,7 +51,7 @@ behavior. Clients are scoped to one asyncio loop. See the [async guide](guides/a
 for ownership, cancellation and bounded concurrency. Provider verification gaps
 apply to both interfaces. No release is published as part of this change.
 
-## Hosted payments (unreleased)
+## Hosted payments (experimental 0.1.0a1 alpha)
 
 `SSLCommerzClient`/`AsyncSSLCommerzClient` are additive and default to sandbox.
 Existing SMS/logistics behavior is unchanged. The scoped BDT, non-physical hosted

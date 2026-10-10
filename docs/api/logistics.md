@@ -20,7 +20,7 @@
 
 ::: jukto.providers.logistics.redx.RedXClient
 
-## Native async (unreleased)
+## Native async (0.1.0a1 alpha)
 
 ::: jukto.interfaces.asynchronous.AsyncBaseLogisticsProvider
 

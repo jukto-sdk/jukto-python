@@ -31,12 +31,12 @@ are not guaranteed to correspond to the original recipient list.
 ## Can FastAPI call these clients in async def?
 
 Sync client calls block and need a sync route, thread-pool bridge or worker.
-The unreleased `Async*Client` classes support native awaited calls; see the
+The alpha `Async*Client` classes support native awaited calls; see the
 [async lifespan example](guides/async.md). Both examples manage provider cleanup.
 
 ## Can I use bKash, Nagad or SSLCommerz today?
 
-The unreleased source tree implements one scoped SSLCOMMERZ hosted BDT flow,
+The alpha includes one experimental SSLCOMMERZ hosted BDT flow,
 including server verification and refund APIs. It is not sandbox/live certified.
 Standalone bKash and Nagad clients remain planned. See the
 [payment guide](guides/payments.md) and [contract audit](payment-contracts.md).

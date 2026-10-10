@@ -1,4 +1,4 @@
-# Native async clients (unreleased)
+# Native async clients (0.1.0a1 alpha)
 
 The source tree provides `AsyncAlphaSMSClient`, `AsyncBulkSMSBDClient`,
 `AsyncGreenWebClient`, `AsyncPathaoClient`, `AsyncRedXClient` and

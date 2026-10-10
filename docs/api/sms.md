@@ -16,7 +16,7 @@
 
 ::: jukto.providers.sms.bulksmsbd.BulkSMSBDClient
 
-## Native async (unreleased)
+## Native async (0.1.0a1 alpha)
 
 ::: jukto.interfaces.asynchronous.AsyncBaseSMSProvider
 

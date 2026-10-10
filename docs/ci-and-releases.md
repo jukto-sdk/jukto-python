@@ -59,7 +59,7 @@ Python 3.14 matrix job, rather than rebuilding it, and requires:
 
 - All supported-version checks to pass.
 - Exactly one wheel and one sdist; matching project names and versions.
-- A tag exactly `v` plus `project.version` in `pyproject.toml`, e.g. `v0.1.0`.
+- A tag exactly `v` plus `project.version` in `pyproject.toml`, currently `v0.1.0a1`.
 - A packaged typing marker and valid distribution metadata.
 
 The publishing job depends on both `checks` and `build`, with GitHub's default
@@ -89,3 +89,52 @@ repository rules require the matrix checks before merging to main. A matching
 Trusted Publisher, environment protections, tag protections and branch rules are
 **external settings, not verified by this implementation**. OIDC acceptance and
 actual upload remain untested because this task explicitly forbids publication.
+
+## Publishing the prepared 0.1.0a1 alpha
+
+Preparation does not publish a release. Version 0.1.0a1 is an early-access alpha,
+with experimental SSLCOMMERZ payments and all existing provider verification gaps.
+Do not mark task 13's external verification gate complete when publishing it.
+
+1. Sign into PyPI and verify ownership/name availability for `jukto`. If no project
+   exists yet, add a pending GitHub publisher from your account's Publishing page:
+   project `jukto`, owner `jukto-sdk`, repository `jukto-python`, workflow
+   `publish.yml`, environment `pypi`. If you already own the project, use its
+   Publishing settings. [Pending publishers](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)
+   do not reserve names; neither ownership nor configuration was verified here.
+2. Verify GitHub Settings → Environments → `pypi`, allowed release tags and desired
+   reviewer protections. Confirm branch/tag protections and control of workflow
+   changes. No long-lived PyPI token is needed for this workflow.
+3. Pick the prepared commit whose seven CI jobs and strict documentation deployment
+   passed. Record its full SHA, inspect its metadata/version and changelog, and
+   confirm that PyPI has not already used version `0.1.0a1`.
+4. Only when you intend to publish, replace `VERIFIED_SHA` below with that full SHA:
+
+   ```bash
+   git fetch origin
+   git tag -a v0.1.0a1 VERIFIED_SHA -m "Jukto 0.1.0a1 early access"
+   git push origin v0.1.0a1
+   ```
+
+   Tag pushing alone does not publish with the current workflow. Do not replace an
+   existing release tag or reuse an uploaded version.
+5. On GitHub Releases → Draft a new release, select `v0.1.0a1`, title it
+   **Jukto 0.1.0a1 — Early access**, and check **Set as a pre-release**. Use the
+   alpha changelog as the body; link the provider/payment audits and explicitly
+   state that sandbox merchant verification is pending. Preview the draft.
+6. **Publish release triggers the real PyPI upload.** It runs the exact-commit checks,
+   validates tag/version identity and uploads the tested Python 3.14 artifacts.
+   Approve the `pypi` deployment if an environment review is configured. Confirm
+   the final publishing job succeeds; a published GitHub release alone is not
+   proof that the package uploaded successfully.
+7. After successful upload, inspect the PyPI README, author/website links and
+   experimental notice. In a fresh environment outside this checkout, install
+   `jukto==0.1.0a1` and run the README's MockTransport example. Do not use a real
+   provider operation as a publication smoke test. Record the release and upload
+   outcome, and remove publication-pending wording in subsequent documentation.
+
+The README pins the alpha explicitly because installers normally exclude
+prereleases unless requested; see [Python versioning](https://packaging.python.org/en/latest/discussions/versioning/).
+TestPyPI uses separate publisher settings and requires a separate workflow; the
+existing `publish.yml` targets real PyPI. No tag, GitHub release or upload was
+created during preparation.

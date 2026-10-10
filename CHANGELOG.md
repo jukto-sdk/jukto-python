@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+No changes queued after the prepared alpha.
+
+## 0.1.0a1 — Early access (prepared; publication pending)
+
+First alpha for developer evaluation. APIs may change before a stable release.
+Created and maintained by [Mehedi H Faysal](https://mahdiblogs.com).
+Offline tests verify implementation behavior, not live provider compatibility.
+SSLCOMMERZ is experimental; authorized merchant lifecycle verification is pending.
+The [provider audit](https://jukto-sdk.github.io/jukto-python/provider-contracts/)
+and [payment audit](https://jukto-sdk.github.io/jukto-python/payment-contracts/)
+remain the source of verification limits.
+
 ### Correctness and security
 
 - Audited AlphaSMS error codes; unknown BulkSMSBD classifications remain generic.
@@ -31,11 +43,11 @@
   side-effect metadata, including state-changing refund GET; no automatic replay.
 - Durable SQLite entitlement/refund reservation example and offline lifecycle checks.
 - Suppress credential-bearing HTTPX URL records only during SDK payment requests.
-- bKash/Nagad remain planned. Sandbox/live verification is pending; no release.
+- bKash/Nagad remain planned. Sandbox/live verification is pending.
 
 ### Migration
 
-Review the compatibility guide before adopting the unreleased tree: BulkSMSBD
+Review the compatibility guide before adopting this alpha: BulkSMSBD
 HTTP now requires an explicit insecure opt-in; unverified errors are generic;
 malformed responses raise UnexpectedProviderResponseError; GreenWeb batches may
 raise SMSBatchError; Pathao routing has no invented geography defaults and order

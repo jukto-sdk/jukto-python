@@ -2,24 +2,26 @@
 
 Jukto is an open-source sync and native asyncio SDK for Bangladesh SMS and logistics APIs,
 created by [Mehedi H Faysal](https://mahdiblogs.com).
+Version **0.1.0a1** is prepared for early-access evaluation; publication is pending.
+APIs may change before a stable release. Offline tests do not certify live providers.
 It provides shared interfaces, typed domain results and classifications for known
 provider failures. Raw responses remain available, and unverified behavior stays
 explicit in the [contract matrix](provider-contracts.md).
 
 Adapters currently cover Steadfast, Pathao, RedX, GreenWeb, AlphaSMS and BulkSMSBD.
-The unreleased tree adds [SSLCOMMERZ hosted BDT payments](guides/payments.md);
-standalone bKash and Nagad remain planned. Native asyncio clients are available in the unreleased
-source tree; see the [async guide](guides/async.md). Provider
+The alpha includes experimental [SSLCOMMERZ hosted BDT payments](guides/payments.md);
+authorized merchant lifecycle verification remains open. Standalone bKash and Nagad
+remain planned. Native asyncio clients are included; see the [async guide](guides/async.md). Provider
 switching requires account/configuration and capability changes; typed models do
 not erase provider-specific requirements or certify delivery semantics.
 
 ## Install
 
 ```bash
-python -m pip install jukto
+python -m pip install jukto==0.1.0a1
 ```
 
-For the current unreleased source and optional framework examples, clone the
+This command works after publication. For source-only framework examples, clone the
 repository, activate a virtual environment and install `-e '.[dev,examples]'`.
 See [contributing](contributing.md) for the exact commands.
 

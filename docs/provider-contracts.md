@@ -532,7 +532,7 @@ provider constraints, routing validity, delivery status or idempotency. See the
 [logistics guide](guides/logistics.md) and [SMS guide](guides/sms.md) before adopting
 these capabilities in an application.
 
-## Native async additions (task 12, unreleased)
+## Native async additions (task 12, 0.1.0a1 alpha)
 
 The six `Async*Client` classes share the same pure payload builders, response
 parsers, classifications and normalized result helpers as sync clients. All
@@ -540,7 +540,7 @@ verification gaps above apply equally to async operations. No new provider
 endpoint, success vocabulary or idempotency guarantee was inferred for this task.
 See [native async](guides/async.md) for asyncio scope, cancellation and lifecycle.
 
-## First payment adapter (task 13, unreleased)
+## First payment adapter (task 13, experimental alpha)
 
 SSLCOMMERZ hosted BDT checkout is the only payment integration. Sync/async clients
 share audited parsers and validation. See the [separate payment contract matrix](payment-contracts.md)

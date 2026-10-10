@@ -1,4 +1,4 @@
-# Payment API (unreleased)
+# Payment API (experimental alpha)
 
 ::: jukto.interfaces.payments.BasePaymentProvider
 
