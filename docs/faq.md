@@ -30,9 +30,9 @@ are not guaranteed to correspond to the original recipient list.
 
 ## Can FastAPI call these clients in async def?
 
-Calls block. Use a sync route, an explicit thread-pool bridge, or a background
-worker. [The FastAPI example](guides/frameworks.md#fastapi) uses a sync route and
-lifespan cleanup; it does not add native asynchronous SDK clients.
+Sync client calls block and need a sync route, thread-pool bridge or worker.
+The unreleased `Async*Client` classes support native awaited calls; see the
+[async lifespan example](guides/async.md). Both examples manage provider cleanup.
 
 ## Can I use bKash, Nagad or SSLCommerz today?
 

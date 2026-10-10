@@ -531,3 +531,11 @@ per-recipient submission, geography options and declared value. It does not cert
 provider constraints, routing validity, delivery status or idempotency. See the
 [logistics guide](guides/logistics.md) and [SMS guide](guides/sms.md) before adopting
 these capabilities in an application.
+
+## Native async additions (task 12, unreleased)
+
+The six `Async*Client` classes share the same pure payload builders, response
+parsers, classifications and normalized result helpers as sync clients. All
+verification gaps above apply equally to async operations. No new provider
+endpoint, success vocabulary or idempotency guarantee was inferred for this task.
+See [native async](guides/async.md) for asyncio scope, cancellation and lifecycle.

@@ -22,7 +22,10 @@
   of the tested artifact for the immutable release commit and matching version/tag.
 - Complete strict-built documentation, offline Django/FastAPI/fake-provider examples,
   provider verification matrix and contributor/security/compatibility guidance.
-- Describe payment and native asynchronous integrations as planned, not available.
+- Native asyncio clients for all six providers with shared sync/async contracts,
+  owned/borrowed lifetime, cancellation-safe cleanup and Pathao single-flight refresh.
+- Native FastAPI lifespan/dependency example with bounded in-flight requests.
+- Payment integrations remain planned; these changes have not been released.
 
 ### Migration
 

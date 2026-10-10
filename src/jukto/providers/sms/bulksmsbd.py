@@ -2,25 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, NoReturn
+from typing import Any, Optional
 import httpx
-from jukto._responses import decode_json, unexpected
+from jukto._responses import decode_json
 
-from jukto.exceptions import (
-    InvalidRequestError,
-    ProviderAuthenticationError,
-    ProviderConnectionError,
-    ProviderError,
-    ProviderRateLimitError,
-    ProviderServerError,
-    ProviderTimeoutError,
-)
+from jukto.exceptions import ProviderConnectionError, ProviderTimeoutError
 from jukto.interfaces.sms import BaseSMSProvider
 from jukto.logger import logger
 from jukto._operations import operation
 
 
-class BulkSMSBDClient(BaseSMSProvider):
+from ._bulksmsbd_contract import BulkSMSBDContract
+
+
+class BulkSMSBDClient(BulkSMSBDContract, BaseSMSProvider):
     """Adapter for BulkSMSBD (bulksmsbd.net) API."""
 
     provider_name = "BulkSMSBD"
@@ -48,86 +43,11 @@ class BulkSMSBDClient(BaseSMSProvider):
             limits=limits,
         )
 
-    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> NoReturn:
-        status_code = exc.response.status_code
-        text = exc.response.text.strip()
-        error_message = f'BulkSMSBD API error ({status_code}): [details withheld]'
-        logger.error('provider=BulkSMSBD operation=handle_http_status_error event=error status=%d', status_code)
-
-        if status_code in (401, 403):
-            raise ProviderAuthenticationError(
-                error_message,
-                status_code=status_code,
-                response_body=text,
-                provider="BulkSMSBD",
-            ) from None
-        elif status_code == 429:
-            raise ProviderRateLimitError(
-                error_message,
-                status_code=status_code,
-                response_body=text,
-                provider="BulkSMSBD",
-            ) from None
-        elif status_code in (400, 422):
-            raise InvalidRequestError(
-                error_message,
-                status_code=status_code,
-                response_body=text,
-                provider="BulkSMSBD",
-            ) from None
-        elif status_code >= 500:
-            raise ProviderServerError(
-                error_message,
-                status_code=status_code,
-                response_body=text,
-                provider="BulkSMSBD",
-            ) from None
-        else:
-            raise ProviderError(
-                error_message,
-                status_code=status_code,
-                response_body=text,
-                provider="BulkSMSBD",
-            ) from None
-
-    def _inspect_response_data(self, data: Any, response: httpx.Response) -> dict[str, Any]:
-        """Preserve codes without assigning unverified provider-specific meanings.
-
-        See docs/provider-contracts.md for the unresolved official contract.
-        """
-        response_code = data.get("response_code") if isinstance(data, dict) else None
-        if type(response_code) is not int:
-            raise unexpected(response, "BulkSMSBD", data)
-
-        # Legacy compatibility only: 202 has not been independently verified.
-        # Do not infer string/float variants or error meanings from existing mocks.
-        if response_code == 202:
-            return data
-
-        message = data.get("error_message") or data.get("message") or "Unclassified provider error"
-        raise ProviderError(
-            f'BulkSMSBD error ({response_code}): [details withheld]',
-            status_code=response_code,
-            response_body=data,
-            provider="BulkSMSBD",
-        )
 
     @operation
     def send_sms(self, phone_numbers: str | list[str], message: str) -> dict[str, Any]:
-        if isinstance(phone_numbers, list):
-            to_string = ",".join(phone_numbers)
-        else:
-            to_string = phone_numbers
-
+        payload = self._prepare_sms(phone_numbers, message)
         assert self.base_url is not None
-        payload = {
-            "api_key": self.api_key,
-            "type": "text",
-            "number": to_string,
-            "senderid": self.sender_id or "",
-            "message": message,
-        }
-
 
         logger.debug('provider=BulkSMSBD operation=send_sms event=request')
 

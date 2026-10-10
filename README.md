@@ -20,8 +20,9 @@ unrecognized responses raise `UnexpectedProviderResponseError`; undocumented
 codes retain generic classifications. An accepted submission is not proof of
 shipment or SMS delivery. Ambiguous outcomes require reconciliation before retry.
 
-**Payments (bKash, Nagad, SSLCommerz) and native async clients are planned, not
-implemented.** Existing clients block; FastAPI examples use worker threads.
+**Payments (bKash, Nagad, SSLCommerz) remain planned.** The unreleased source tree
+adds native asyncio clients for all six providers; see the [async guide](docs/guides/async.md)
+for lifecycle, cancellation and FastAPI usage. Existing sync clients still block.
 
 | Provider | Client | Verification and setup |
 | --- | --- | --- |

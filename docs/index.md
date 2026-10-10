@@ -1,13 +1,14 @@
 # Jukto Python SDK
 
-Jukto is an open-source synchronous SDK for Bangladesh SMS and logistics APIs,
+Jukto is an open-source sync and native asyncio SDK for Bangladesh SMS and logistics APIs,
 created by [Mehedi Hasan Faysal](https://github.com/MahdiBuilds), CTO of Feather IT.
 It provides shared interfaces, typed domain results and classifications for known
 provider failures. Raw responses remain available, and unverified behavior stays
 explicit in the [contract matrix](provider-contracts.md).
 
 Adapters currently cover Steadfast, Pathao, RedX, GreenWeb, AlphaSMS and BulkSMSBD.
-Payments and native asynchronous clients are planned, not available. Provider
+Payments remain planned. Native asyncio clients are available in the unreleased
+source tree; see the [async guide](guides/async.md). Provider
 switching requires account/configuration and capability changes; typed models do
 not erase provider-specific requirements or certify delivery semantics.
 

@@ -19,3 +19,13 @@
 ::: jukto.providers.logistics.pathao.PathaoClient
 
 ::: jukto.providers.logistics.redx.RedXClient
+
+## Native async (unreleased)
+
+::: jukto.interfaces.asynchronous.AsyncBaseLogisticsProvider
+
+::: jukto.providers.logistics.async_steadfast.AsyncSteadfastClient
+
+::: jukto.providers.logistics.async_pathao.AsyncPathaoClient
+
+::: jukto.providers.logistics.async_redx.AsyncRedXClient

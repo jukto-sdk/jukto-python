@@ -79,23 +79,31 @@ class BaseLogisticsProvider(TransportLifecycle, ABC):
 
     def create_shipment(self, parcel: Parcel) -> ShipmentCreationResult:
         raw = self.create_order(parcel)
-        content = raw.get('data', {}) if self.provider_name == 'Pathao' else raw.get('consignment', {}) if self.provider_name == 'Steadfast' else raw
-        provider_id = identifier(content.get('consignment_id') if self.provider_name != 'RedX' else content.get('tracking_id'))
-        status = Outcome.ACCEPTED if provider_id is not None and self.provider_name in ('Pathao','RedX') else Outcome.UNKNOWN
-        return ShipmentCreationResult(self.provider_name, provider_id, status,
-                                      provider_status=raw.get('type',raw.get('status')), raw=raw)
+        return shipment_creation(self.provider_name, raw)
 
     def check_shipment_status(self, consignment_id: str) -> ShipmentStatusResult:
         raw = self._status_payload(consignment_id)
-        if self.provider_name == 'Pathao':
-            original = raw['data']['order_status']
-        elif self.provider_name == 'RedX':
-            original = raw['parcel']['status']
-        else:
-            original = raw['delivery_status']
-        # No verified status vocabulary for these polling endpoints; retain evidence.
-        return ShipmentStatusResult(self.provider_name, consignment_id, Outcome.UNKNOWN,
-                                    provider_status=original, raw=raw)
+        return shipment_status(self.provider_name, consignment_id, raw)
 
     def _status_payload(self, consignment_id: str) -> dict[str, Any]:
         return self.check_status(consignment_id)
+
+
+def shipment_creation(provider: str, raw: dict[str, Any]) -> ShipmentCreationResult:
+    content = raw.get('data', {}) if provider == 'Pathao' else raw.get('consignment', {}) if provider == 'Steadfast' else raw
+    provider_id = identifier(content.get('consignment_id') if provider != 'RedX' else content.get('tracking_id'))
+    status = Outcome.ACCEPTED if provider_id is not None and provider in ('Pathao','RedX') else Outcome.UNKNOWN
+    return ShipmentCreationResult(provider, provider_id, status,
+                                  provider_status=raw.get('type',raw.get('status')), raw=raw)
+
+
+def shipment_status(provider: str, consignment_id: str, raw: dict[str, Any]) -> ShipmentStatusResult:
+    if provider == 'Pathao':
+        original = raw['data']['order_status']
+    elif provider == 'RedX':
+        original = raw['parcel']['status']
+    else:
+        original = raw['delivery_status']
+    # No verified status vocabulary for these polling endpoints; retain evidence.
+    return ShipmentStatusResult(provider, consignment_id, Outcome.UNKNOWN,
+                                provider_status=original, raw=raw)

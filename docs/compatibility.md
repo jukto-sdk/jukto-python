@@ -42,3 +42,11 @@ the exception and its impact. Do not silently discard unknown upstream states.
   Legacy numeric inputs remain accepted; avoid float for new monetary inputs.
 
 Consult [the audit](provider-contracts.md) for exact evidence and open contracts.
+
+## Native async (unreleased)
+
+`Async*Client` classes are additive. Await operations and use `async with` or
+`aclose()`; inject `httpx.AsyncClient`, not `httpx.Client`. Sync APIs retain their
+behavior. Clients are scoped to one asyncio loop. See the [async guide](guides/async.md)
+for ownership, cancellation and bounded concurrency. Provider verification gaps
+apply to both interfaces. No release is published as part of this change.

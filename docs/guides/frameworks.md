@@ -62,8 +62,8 @@ provider is reused across requests in one worker, then closed after serving ends
 Do not close it inside an individual request. Each process has a separate provider.
 
 The route is a normal `def`, so FastAPI runs the blocking SDK operation in a worker
-thread. Shutdown cleanup is also offloaded. This is application integration, not
-native async support in Jukto. Follow FastAPI's
+thread. Shutdown cleanup is also offloaded. For native awaited requests in the unreleased tree, use the
+[async lifespan example](async.md). Follow FastAPI's
 [lifespan](https://fastapi.tiangolo.com/advanced/events/) and
 [sync/async guidance](https://fastapi.tiangolo.com/async/).
 
