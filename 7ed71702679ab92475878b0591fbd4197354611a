@@ -1,0 +1,15 @@
+{
+    "version": "0.1.0",
+    "id": "7a126fcc-fe05-4f46-a8fc-fffbd528b5c5",
+    "timestamp": "2026-10-10T01:54:16.150789Z",
+    "vcs": {
+        "type": "git",
+        "revision": "7ed71702679ab92475878b0591fbd4197354611a",
+        "origin": "github",
+        "repository": "https://github.com/jukto-sdk/jukto-python.git"
+    },
+    "tool": {
+        "name": "chatter-cli"
+    },
+    "files": []
+}
