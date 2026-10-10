@@ -15,6 +15,9 @@ site/
 LAUNCH_PLAYBOOK.md
 REVIEW_PROMPT_ASTRA.md
 IMPLEMENTATION_TODO.md
+MASTER_PLAN.md
+# Personal handoff/release instructions (local only)
+/*.local.md
 # Generated quality-check output
 coverage.xml
 coverage.json
