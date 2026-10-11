@@ -43,6 +43,8 @@ dev = [
   "respx>=0.22.0",
   "mkdocs-material>=9.5.0",
   "mkdocstrings[python]>=0.24.0",
+  # PyMdown 12.2 changes Highlight's API used by mkdocstrings 1.0.6.
+  "pymdown-extensions>=10.2,<12.2",
 ]
 
 [project.urls]
