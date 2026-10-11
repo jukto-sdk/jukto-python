@@ -1,4 +1,28 @@
+---
+title: "Jukto FAQ: Providers, Async Clients and Payments"
+description: "Answers about Jukto Python support, SMS and courier providers, Django and FastAPI integration, experimental payments and verification limits."
+---
+
 # Frequently asked questions
+
+## What is Jukto?
+
+Jukto (যুক্ত) is an MIT-licensed Python SDK created by
+[Mehedi H Faysal](https://mahdiblogs.com) for Bangladesh SMS and courier API
+integration. It provides sync and native async clients, typed results and shared
+error handling. SSLCOMMERZ hosted payments are experimental.
+
+## How do I install Jukto, and which Python versions are supported?
+
+Install the early-access release with `python -m pip install jukto==0.1.0a1`.
+Python 3.9 or later is required. See the [compatibility policy](compatibility.md)
+and [offline quickstart](index.md#offline-quickstart) before using real credentials.
+
+## Does Jukto support JavaScript, PHP or WordPress?
+
+This repository distributes the Python SDK. It does not currently provide a
+JavaScript or PHP SDK, or a WordPress/WooCommerce plugin. Do not interpret the
+project's wider ecosystem plans as released integrations.
 
 ## Can I switch providers by changing one line?
 

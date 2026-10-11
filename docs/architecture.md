@@ -1,3 +1,8 @@
+---
+title: "Architecture and resource ownership"
+description: "Understand Jukto provider interfaces, HTTPX client ownership, transport lifetime, typed results and application boundaries."
+---
+
 # Architecture and resource ownership
 
 Base provider interfaces separate application contracts from provider adapters.
@@ -30,5 +35,6 @@ capabilities describe available methods, not live certification or verified
 upstream status semantics; see the [matrix](provider-contracts.md).
 
 The [fake provider and framework examples](guides/frameworks.md) demonstrate
-injection, client lifetime and error conversion. Native async adapters are planned;
-all current provider HTTP operations block the calling thread.
+injection, client lifetime and error conversion. Native async adapters use HTTPX async clients; await their operations and
+follow the [async guide](guides/async.md) for loop scope and cleanup. Synchronous
+provider HTTP operations block the calling thread.

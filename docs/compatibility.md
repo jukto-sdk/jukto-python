@@ -1,3 +1,8 @@
+---
+title: "Compatibility and deprecation policy"
+description: "Read Jukto Python support, public API boundaries, alpha versioning, deprecation policy and migration notes for typed results and async clients."
+---
+
 # Compatibility and deprecation policy
 
 ## Public surface

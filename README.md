@@ -3,6 +3,9 @@
 A sync and native async Python SDK for Bangladesh's SMS and courier APIs, created by
 [Mehedi H Faysal](https://mahdiblogs.com).
 
+[![PyPI](https://img.shields.io/pypi/v/jukto)](https://pypi.org/project/jukto/)
+[![Documentation](https://img.shields.io/badge/docs-Jukto-blue)](https://jukto-sdk.github.io/jukto-python/)
+
 [![CI](https://github.com/jukto-sdk/jukto-python/actions/workflows/ci.yml/badge.svg)](https://github.com/jukto-sdk/jukto-python/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/jukto-sdk/jukto-python/blob/main/LICENSE)
 
@@ -48,7 +51,7 @@ regressions, not live provider certification.
 python -m pip install jukto==0.1.0a1
 ```
 
-The installation command works after the alpha is published. Python 3.9+ is
+The alpha is available on [PyPI](https://pypi.org/project/jukto/0.1.0a1/). Python 3.9+ is
 required; CI covers 3.9–3.15. Explicitly pin the alpha version when evaluating it.
 
 This standalone example works with the installed package and cannot send an SMS:

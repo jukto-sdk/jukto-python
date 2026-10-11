@@ -1,3 +1,8 @@
+---
+title: "Errors, privacy and reconciliation"
+description: "Handle Jukto provider errors and partial or uncertain outcomes, reconcile before resubmitting, and protect credentials and sensitive response data."
+---
+
 # Errors, privacy and reconciliation
 
 Catch `JuktoError` for recognized SDK errors. Known provider failures receive

@@ -1,3 +1,8 @@
+---
+title: "Payment API (experimental alpha)"
+description: "Reference experimental SSLCOMMERZ payment clients, payment interfaces and result models. Merchant lifecycle verification remains pending."
+---
+
 # Payment API (experimental alpha)
 
 ::: jukto.interfaces.payments.BasePaymentProvider

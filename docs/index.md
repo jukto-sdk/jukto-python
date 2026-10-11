@@ -1,8 +1,13 @@
+---
+title: "Jukto Python SDK for Bangladesh SMS and Courier APIs"
+description: "Integrate Bangladesh SMS and courier APIs with sync and async Python clients. Explore Jukto installation, provider guides and experimental SSLCOMMERZ payments."
+---
+
 # Jukto Python SDK
 
 Jukto is an open-source sync and native asyncio SDK for Bangladesh SMS and logistics APIs,
 created by [Mehedi H Faysal](https://mahdiblogs.com).
-Version **0.1.0a1** is prepared for early-access evaluation; publication is pending.
+Version **0.1.0a1** is available on [PyPI](https://pypi.org/project/jukto/0.1.0a1/) for early-access evaluation.
 APIs may change before a stable release. Offline tests do not certify live providers.
 It provides shared interfaces, typed domain results and classifications for known
 provider failures. Raw responses remain available, and unverified behavior stays
@@ -21,7 +26,7 @@ not erase provider-specific requirements or certify delivery semantics.
 python -m pip install jukto==0.1.0a1
 ```
 
-This command works after publication. For source-only framework examples, clone the
+For source-only framework examples, clone the
 repository, activate a virtual environment and install `-e '.[dev,examples]'`.
 See [contributing](contributing.md) for the exact commands.
 

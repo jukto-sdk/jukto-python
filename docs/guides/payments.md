@@ -1,7 +1,12 @@
+---
+title: "Experimental SSLCOMMERZ Python Payment Integration"
+description: "Explore Jukto experimental SSLCOMMERZ hosted BDT payments, server verification and refunds. Merchant lifecycle verification remains pending."
+---
+
 # Hosted payments (experimental alpha)
 
 The 0.1.0a1 alpha includes `SSLCommerzClient` and `AsyncSSLCommerzClient` for one
-experimental hosted checkout integration. Publication is pending. Read the
+experimental hosted checkout integration. The alpha is available on [PyPI](https://pypi.org/project/jukto/0.1.0a1/). Read the
 [contract audit](../payment-contracts.md) before using it: BDT, non-physical goods,
 no shipping/EMI, and no live/sandbox transaction certification. Standalone bKash
 and Nagad remain planned.

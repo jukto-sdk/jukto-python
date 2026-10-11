@@ -1,3 +1,8 @@
+---
+title: "Bangladesh SMS API Integration with Python"
+description: "Use Jukto clients for AlphaSMS, GreenWeb and BulkSMSBD. Learn SMS submission, typed results, partial outcomes and provider verification limits."
+---
+
 # SMS integration
 
 Use `submit_sms(phone_or_list, message)` for `SMSSubmissionResult`; `send_sms`

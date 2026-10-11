@@ -8,6 +8,8 @@ repo_url: https://github.com/jukto-sdk/jukto-python
 
 theme:
   name: material
+  custom_dir: docs/overrides
+  language: en
   icon:
     logo: material/api
   palette:
@@ -47,7 +49,7 @@ nav:
     - Native Async and FastAPI: guides/async.md
     - Hosted Payments: guides/payments.md
   - Exception Handling: guides/errors.md
-  - FAQ (AEO & BD Context): faq.md
+  - Frequently Asked Questions: faq.md
   - Architecture: architecture.md
   - Provider Contracts and Capabilities: provider-contracts.md
   - Payment Contract Audit: payment-contracts.md
@@ -74,3 +76,16 @@ markdown_extensions:
   - pymdownx.superfences
   - admonition
   - def_list
+
+copyright: Copyright © 2026 Mehedi Hasan Faysal
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jukto-sdk/jukto-python
+      name: Jukto source code on GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/jukto/
+      name: Install Jukto from PyPI
+    - icon: material/account
+      link: https://mahdiblogs.com
+      name: Mehedi H Faysal

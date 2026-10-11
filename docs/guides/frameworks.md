@@ -1,3 +1,8 @@
+---
+title: "Django and FastAPI Integration with Jukto"
+description: "Integrate Jukto in Django and FastAPI with client lifecycle management, dependency injection and offline HTTPX MockTransport examples."
+---
+
 # Django, FastAPI and dependency injection
 
 These source-checkout examples make synchronous SMS submissions behind an

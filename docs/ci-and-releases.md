@@ -1,3 +1,8 @@
+---
+title: "CI and release gates"
+description: "Understand Jukto Python CI checks, coverage gates, distribution validation and the authorization required to publish a release."
+---
+
 # CI and release gates
 
 ## Supported-version evidence
