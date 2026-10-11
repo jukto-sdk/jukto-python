@@ -1,6 +1,6 @@
 ---
 title: "Logistics API"
-description: "Logistics API for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Reference sync and async courier clients, Parcel fields, provider options, capabilities and typed shipment results for Steadfast, Pathao and RedX."
 ---
 
 # Logistics API

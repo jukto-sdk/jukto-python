@@ -1,6 +1,6 @@
 ---
 title: "CI and release gates"
-description: "CI and release gates for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Understand Jukto Python CI checks, coverage gates, distribution validation and the authorization required to publish a release."
 ---
 
 # CI and release gates

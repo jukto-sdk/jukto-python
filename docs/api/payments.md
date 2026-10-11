@@ -1,6 +1,6 @@
 ---
 title: "Payment API (experimental alpha)"
-description: "Payment API (experimental alpha) for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Reference experimental SSLCOMMERZ payment clients, payment interfaces and result models. Merchant lifecycle verification remains pending."
 ---
 
 # Payment API (experimental alpha)

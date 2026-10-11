@@ -1,6 +1,6 @@
 ---
 title: "SMS API"
-description: "SMS API for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Reference sync and async AlphaSMS, GreenWeb and BulkSMSBD clients, SMS submission results, recipient outcomes and batch results."
 ---
 
 # SMS API

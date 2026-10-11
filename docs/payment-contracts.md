@@ -1,6 +1,6 @@
 ---
 title: "SSLCOMMERZ hosted payment contract audit"
-description: "SSLCOMMERZ hosted payment contract audit for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Review SSLCOMMERZ hosted checkout, verification and refund contracts, scoped BDT support and unresolved merchant lifecycle evidence."
 ---
 
 # SSLCOMMERZ hosted payment contract audit

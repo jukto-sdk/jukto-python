@@ -1,6 +1,6 @@
 ---
 title: "Exception API"
-description: "Exception API for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Reference Jukto exception classes for configuration, provider and transport failures, including metadata used to reconcile uncertain outcomes."
 ---
 
 # Exception API

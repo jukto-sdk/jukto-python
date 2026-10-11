@@ -1,6 +1,6 @@
 ---
 title: "Provider contract audit"
-description: "Provider contract audit for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Review SMS and courier contract evidence, provider capability differences and unresolved behavior before integrating Jukto."
 ---
 
 # Provider contract audit

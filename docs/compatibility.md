@@ -1,6 +1,6 @@
 ---
 title: "Compatibility and deprecation policy"
-description: "Compatibility and deprecation policy for the Jukto Python SDK. Read implementation details, integration guidance and documented limitations."
+description: "Read Jukto Python support, public API boundaries, alpha versioning, deprecation policy and migration notes for typed results and async clients."
 ---
 
 # Compatibility and deprecation policy
