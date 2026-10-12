@@ -1,0 +1,2464 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Review SMS and courier contract evidence, provider capability differences and unresolved behavior before integrating Jukto.">
+      
+      
+        <meta name="author" content="Mehedi H Faysal">
+      
+      
+        <link rel="canonical" href="https://jukto-sdk.github.io/jukto-python/provider-contracts/">
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../payment-contracts/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Provider contract audit - Jukto Python SDK</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  
+    
+    
+    <meta name="google-site-verification" content="DwZEnxFuAMPZusoGp6m_39E24pnIzSM25_u296u3Vn8" />
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Jukto Python SDK">
+    <meta property="og:title" content="Provider contract audit | Jukto Python SDK">
+    <meta property="og:description" content="Review SMS and courier contract evidence, provider capability differences and unresolved behavior before integrating Jukto.">
+    <meta property="og:url" content="https://jukto-sdk.github.io/jukto-python/provider-contracts/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Provider contract audit | Jukto Python SDK">
+    <meta name="twitter:description" content="Review SMS and courier contract evidence, provider capability differences and unresolved behavior before integrating Jukto.">
+    
+  
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#provider-contract-audit" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Jukto Python SDK" class="md-header__button md-logo" aria-label="Jukto Python SDK" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 7H5a2 2 0 0 0-2 2v8h2v-4h2v4h2V9a2 2 0 0 0-2-2m0 4H5V9h2m7-2h-4v10h2v-4h2a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2m0 4h-2V9h2m6 0v6h1v2h-4v-2h1V9h-1V7h4v2Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Jukto Python SDK
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Provider contract audit
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jukto-sdk/jukto-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jukto-sdk/jukto-python
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Introduction
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../guides/logistics/" class="md-tabs__link">
+          
+  
+  
+  Integration Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../guides/errors/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Exception Handling
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Frequently Asked Questions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Provider Contracts and Capabilities
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../payment-contracts/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Payment Contract Audit
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../ci-and-releases/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  CI and Releases
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../compatibility/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Compatibility and Migration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../security/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Security
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/logistics/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Jukto Python SDK" class="md-nav__button md-logo" aria-label="Jukto Python SDK" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 7H5a2 2 0 0 0-2 2v8h2v-4h2v4h2V9a2 2 0 0 0-2-2m0 4H5V9h2m7-2h-4v10h2v-4h2a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2m0 4h-2V9h2m6 0v6h1v2h-4v-2h1V9h-1V7h4v2Z"/></svg>
+
+    </a>
+    Jukto Python SDK
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jukto-sdk/jukto-python" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jukto-sdk/jukto-python
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integration Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Integration Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/logistics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Courier / Logistics API (Bangladesh)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/sms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SMS Gateways (Bangladesh)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/frameworks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Django, FastAPI and Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native Async and FastAPI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted Payments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exception Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frequently Asked Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Provider Contracts and Capabilities
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Provider Contracts and Capabilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-and-current-implementation-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence and current implementation matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alphasms-classification-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AlphaSMS classification policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unresolved-bulksmsbd-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unresolved BulkSMSBD contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redx-shipment-contract-task-1-findings-superseded-in-part-by-task-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RedX shipment contract: task 1 findings (superseded in part by task 6)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatibility-changes-in-this-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility changes in this task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2-credential-transport-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: credential transport policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3-logging-and-exception-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: logging and exception privacy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4-malformed-responses-and-sms-batch-outcomes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: malformed responses and SMS batch outcomes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Task 4: malformed responses and SMS batch outcomes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#greenweb-evidence-and-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreenWeb evidence and compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pathao-token-lifecycle-and-replay-task-5-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pathao token lifecycle and replay (task 5, 2026-10-10)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shipment-input-validation-and-migration-task-6-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shipment input validation and migration (task 6, 2026-10-10)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Shipment input validation and migration (task 6, 2026-10-10)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pathao-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pathao evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redx-evidence-and-corrections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RedX evidence and corrections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evidence-record-and-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence record and limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-client-ownership-and-lifecycle-task-7-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP client ownership and lifecycle (task 7, 2026-10-10)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typed-domain-contracts-and-migration-task-8-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed domain contracts and migration (task 8, 2026-10-10)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Typed domain contracts and migration (task 8, 2026-10-10)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#error-metadata-and-ambiguity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error metadata and ambiguity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options-capabilities-and-monetary-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options, capabilities and monetary values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk-capabilities-and-verification-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SDK capabilities and verification summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#native-async-additions-task-12-010a1-alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native async additions (task 12, 0.1.0a1 alpha)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#first-payment-adapter-task-13-experimental-alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        First payment adapter (task 13, experimental alpha)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payment-contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payment Contract Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci-and-releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI and Releases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility and Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/logistics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logistics Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/sms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SMS Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-and-current-implementation-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence and current implementation matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alphasms-classification-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AlphaSMS classification policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unresolved-bulksmsbd-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unresolved BulkSMSBD contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redx-shipment-contract-task-1-findings-superseded-in-part-by-task-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RedX shipment contract: task 1 findings (superseded in part by task 6)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatibility-changes-in-this-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility changes in this task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2-credential-transport-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: credential transport policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3-logging-and-exception-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: logging and exception privacy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4-malformed-responses-and-sms-batch-outcomes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: malformed responses and SMS batch outcomes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Task 4: malformed responses and SMS batch outcomes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#greenweb-evidence-and-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreenWeb evidence and compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pathao-token-lifecycle-and-replay-task-5-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pathao token lifecycle and replay (task 5, 2026-10-10)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shipment-input-validation-and-migration-task-6-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shipment input validation and migration (task 6, 2026-10-10)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Shipment input validation and migration (task 6, 2026-10-10)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pathao-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pathao evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redx-evidence-and-corrections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RedX evidence and corrections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evidence-record-and-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence record and limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-client-ownership-and-lifecycle-task-7-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP client ownership and lifecycle (task 7, 2026-10-10)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typed-domain-contracts-and-migration-task-8-2026-10-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed domain contracts and migration (task 8, 2026-10-10)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Typed domain contracts and migration (task 8, 2026-10-10)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#error-metadata-and-ambiguity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error metadata and ambiguity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options-capabilities-and-monetary-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options, capabilities and monetary values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdk-capabilities-and-verification-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SDK capabilities and verification summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#native-async-additions-task-12-010a1-alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native async additions (task 12, 0.1.0a1 alpha)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#first-payment-adapter-task-13-experimental-alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        First payment adapter (task 13, experimental alpha)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/jukto-sdk/jukto-python/edit/master/docs/provider-contracts.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="provider-contract-audit">Provider contract audit</h1>
+<p>Audit date: <strong>2026-10-10</strong>. Verification means comparison with retrievable official documentation, not a live API transaction. No credentials, SMS submissions, shipment creation, or captured production responses were used. Unknown means unresolved, not supported by inference from existing mocks or third-party wrappers.</p>
+<p>The numbered task sections are historical snapshots; their progress statements
+describe that task's completion point. The latest capability/verification summary
+appears at the end of this page. Later SDK changes do not retroactively establish
+unverified upstream contracts.</p>
+<h2 id="evidence-and-current-implementation-matrix">Evidence and current implementation matrix</h2>
+<p>Paths below are relative to the base URL. Unless explicitly marked verified, these are <strong>implementation inventory</strong>, not claims about upstream behavior. Last independently verified date is “unverified” where no authoritative specification was retrieved.</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>SDK endpoints</th>
+<th>SDK request fields/auth</th>
+<th>SDK response handling</th>
+<th>Official evidence and last verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AlphaSMS</td>
+<td><code>https://api.sms.net.bd/sendsms</code></td>
+<td>Form <code>api_key</code>, <code>msg</code>, <code>to</code>, optional <code>sender_id</code></td>
+<td>Object with <code>error</code>; documented success 0 and <code>data.request_id</code>; documented failures below</td>
+<td><a href="https://sms.bd/api">Official API</a>, 2026-10-10; verified published contract only</td>
+</tr>
+<tr>
+<td>BulkSMSBD</td>
+<td><code>http://bulksmsbd.net/api/smsapi</code></td>
+<td>Form <code>api_key</code>, <code>type</code>, <code>number</code>, <code>senderid</code>, <code>message</code></td>
+<td>Integer <code>response_code</code>; legacy success 202 retained; all other integers raise generic ProviderError</td>
+<td><a href="https://bulksmsbd.net/">Provider site</a> redirected to login; <code>/api</code> and <code>/api.php</code> retrieval failed; <strong>unverified</strong></td>
+</tr>
+<tr>
+<td>Steadfast</td>
+<td><code>https://portal.packzy.com/api/v1/create_order</code>, <code>/status_by_cid/{id}</code></td>
+<td>Headers Api-Key/Secret-Key; JSON invoice, recipient_name/phone/address, cod_amount, note</td>
+<td>Raw JSON; integer body status &gt;=400 mapped by adapter</td>
+<td><a href="https://steadfast.com.bd/business">Official business page</a> confirms API offering, not this wire contract; <strong>unverified</strong></td>
+</tr>
+<tr>
+<td>Pathao</td>
+<td><code>https://api-hermes.pathao.com/aladdin/api/v1/issue-token</code>, <code>/orders</code>, <code>/orders/{id}/info</code>, <code>/stores</code>; sandbox host courier-api-sandbox.pathao.com</td>
+<td>Token request client_id/secret and password or refresh grant; orders use Bearer auth and store_id, merchant_order_id, recipient fields/geography, delivery_type, item_type, special_instruction, item_quantity/weight, amount_to_collect</td>
+<td>Token access_token/refresh_token/expires_in; resource responses returned raw</td>
+<td><a href="https://merchant.pathao.com/courier/developer-api">Official developer panel</a> returned JavaScript shell; <strong>unverified</strong></td>
+</tr>
+<tr>
+<td>RedX</td>
+<td><code>https://openapi.redx.com.bd/v1.0.0-beta/parcel</code>, legacy <code>/parcels/tracking/{id}</code>; sandbox host sandbox.redx.com.bd</td>
+<td>API-ACCESS-TOKEN Bearer; customer name/phone/address, RedX delivery_area/name and delivery_area_id, invoice, cash collection, weight, instruction, separate declared value, optional pickup_store_id</td>
+<td>Raw JSON; create tracking_id; legacy tracking/error guards remain unverified</td>
+<td><a href="https://redx.com.bd/_next/static/chunks/pages/developer-api-fb24bbe4344e870c.js">Official developer specification bundle</a>, 2026-10-10: create fields/endpoint/auth verified; exact create weight units/types and legacy tracking contract unresolved; see task 6</td>
+</tr>
+<tr>
+<td>GreenWeb</td>
+<td><code>https://api.greenweb.com.bd/api.php</code></td>
+<td>Form token, to, message; json=1</td>
+<td>Per-recipient SENT/FAILED JSON list or Ok:/Error: text lines</td>
+<td><a href="https://bdbulksms.com/bulk-sms-api-bd-english.php">Official English manual</a>, linked via the portal's homepage; 2026-10-10; published JSON/text format verified, standalone text-error mappings remain legacy/unverified</td>
+</tr>
+</tbody>
+</table>
+<p>HTTP status classifications in the adapters are SDK policies, not verification of each provider's application codes. Unverified adapters still require a future authoritative audit; existing tests are implementation regressions, not certifications.</p>
+<h2 id="alphasms-classification-policy">AlphaSMS classification policy</h2>
+<p>Source: the Common Errors and Send SMS Errors sections of https://sms.bd/api, checked 2026-10-10. Recorded paraphrased semantics and test expectations are in <code>tests/fixtures/alphasms_contract.json</code>; fixtures are synthetic and retain their provenance.</p>
+<table>
+<thead>
+<tr>
+<th>Codes</th>
+<th>Jukto classification</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Return response</td>
+<td>Accepted submission, not proof of delivery</td>
+</tr>
+<tr>
+<td>403, 405</td>
+<td>ProviderAuthenticationError</td>
+<td>Permission/access rejection</td>
+</tr>
+<tr>
+<td>410, 411</td>
+<td>ProviderAuthenticationError</td>
+<td>Merchant/reseller account unavailable</td>
+</tr>
+<tr>
+<td>404</td>
+<td>ResourceNotFoundError</td>
+<td>Missing resource</td>
+</tr>
+<tr>
+<td>409</td>
+<td>ProviderServerError</td>
+<td>Upstream internal failure</td>
+</tr>
+<tr>
+<td>400, 412–416, 420</td>
+<td>InvalidRequestError</td>
+<td>Parameter, scheduling, sender, message, recipient, or content rejection</td>
+</tr>
+<tr>
+<td>417</td>
+<td>InsufficientBalanceError</td>
+<td>Credit depletion</td>
+</tr>
+<tr>
+<td>Other integer codes</td>
+<td>ProviderError</td>
+<td>No documented semantics established</td>
+</tr>
+</tbody>
+</table>
+<p>These exception classes are Jukto policy, not names supplied by the provider. Permission denial and account expiration use the existing authentication category; they do not imply a token refresh will resolve the problem. A 409 application code is not assumed to be an HTTP conflict.</p>
+<p>The official JSON example has an integer <code>error</code>; its C# examples compare against string zero. The adapter accepts canonical nonnegative ASCII decimal strings as a compatibility policy and applies the same code semantics. This is not proof that every code has been observed as a string. Bools, floats, whitespace-padded/zero-padded strings, missing codes, and non-object envelopes raise generic ProviderError. Unknown integer codes retain their code and body.</p>
+<p>The docs also list schedule and content_id (required for bulk SMS); these are not exposed by the current adapter. Full success-data schema validation and JSON decoding normalization remain task 4, not completed here.</p>
+<h2 id="unresolved-bulksmsbd-contract">Unresolved BulkSMSBD contract</h2>
+<p>Official error table, envelope schema, string-code support, and success code could not be retrieved without an account. Do not substitute another company's BulkSMS.com API or a third-party wrapper as authority. No new semantics were inferred.</p>
+<p>The old 1002/1003/1004/1005/1006/1007/1008/1010 classifications and message-substring inference have been removed. All non-202 integer codes now raise ProviderError with the original body and code. Integer 202 is retained solely for legacy compatibility and remains explicitly <strong>unverified</strong>, including its acceptance/delivery meaning. String 202 and floats are not silently coerced. Unknown envelopes fail closed.</p>
+<p>Resolution requires a provider-issued specification/API-page export or sanitized responses with recorded endpoint, API version, date, and provenance. No credentials should be included.</p>
+<h2 id="redx-shipment-contract-task-1-findings-superseded-in-part-by-task-6">RedX shipment contract: task 1 findings (superseded in part by task 6)</h2>
+<p>At the task 1 baseline, the adapter placed the full address into delivery_area, ignores recipient_area, multiplies item_weight by 1000, and sets value equal to COD. None of these choices was independently verified in this audit.</p>
+<p>Obtain the official create-parcel schema defining geographic name/ID fields and lookup relationship, parcel_weight units/range/rounding, value meaning and requiredness, cash_collection_amount semantics, pickup-store requirements, response envelope, and error table. Do not invent delivery_area_id or change weight units based on unofficial examples. Task 1 made no RedX payload change. The task 6 section below records newly retrieved primary evidence, corrections, and remaining ambiguities.</p>
+<h2 id="compatibility-changes-in-this-task">Compatibility changes in this task</h2>
+<ul>
+<li>AlphaSMS 405 now means authentication/access failure, 417 means insufficient balance, 416 means invalid recipients, 404 means missing resource, and 409 means provider server failure.</li>
+<li>Undocumented AlphaSMS application codes 401/402/406/422 now raise generic ProviderError instead of guessed specific classes. Actual HTTP status handling is unchanged.</li>
+<li>BulkSMSBD application error codes previously classified specifically now raise generic ProviderError. Callers should catch ProviderError and retain the vendor code until the official contract is available.</li>
+<li>Unexpected AlphaSMS/BulkSMSBD code envelopes no longer return success-like dictionaries. Existing success responses remain raw dictionaries.</li>
+<li><code>status_code</code> still carries application codes for backwards compatibility; separating HTTP status and vendor code remains task 8.</li>
+<li>No retries or automatic failover were added. A server error does not establish that resubmitting SMS is safe.</li>
+</ul>
+<p>Task 1 is partially complete: matrix and AlphaSMS audit are complete; BulkSMSBD and RedX authoritative verification and the remaining providers' schema evidence are unresolved. Tasks 2 onward were not started.</p>
+<h2 id="task-2-credential-transport-policy">Task 2: credential transport policy</h2>
+<p>All six clients now reject cleartext endpoints by default, validate endpoints again
+before sending, enable TLS certificate verification explicitly, and refuse all
+redirects (including same-origin redirects). Invalid schemes, relative URLs, and
+embedded URL credentials are rejected. This policy also covers Pathao token issue,
+refresh, and authenticated replay. No client reuse or retry redesign was added.</p>
+<p>Every concrete client accepts the keyword-only <code>allow_insecure_http=True</code> option
+for deliberate legacy/local use. It permits HTTP only; it does not disable HTTPS
+certificate verification or enable redirect following. Credentials and SMS content
+sent over HTTP are unencrypted.</p>
+<p>BulkSMSBD's legacy HTTP constant remains unchanged pending authoritative verification
+of HTTPS <strong>POST</strong> support. Consequently, construction with its default HTTP endpoint
+now raises JuktoConfigurationError unless explicitly opted in. HTTPS override URLs
+are accepted by the transport policy but are not certified provider integrations.</p>
+<p>A credential-free <code>curl --head --max-time 20 --proto '=https'</code> request to the exact
+<code>https://bulksmsbd.net/api/smsapi</code> path on 2026-10-10 succeeded with default certificate
+verification. It returned HTTP 200, Apache, and Content-Type application/json.
+This establishes TLS reachability only: HEAD carries no response body and does not
+verify SMS POST compatibility or application success. The public documentation
+fetch for that URL failed; the provider homepage still exposes a login panel.
+The endpoint-verification checkbox remains open until provider-issued documentation
+or authorized, provenance-recorded sandbox evidence confirms HTTPS SMS submission.</p>
+<p>Compatibility: existing custom HTTP endpoints and default BulkSMSBD construction
+must now opt in explicitly. Prefer confirmed HTTPS endpoints. Endpoint policy
+failures raise JuktoConfigurationError before HTTP requests are made.</p>
+<h2 id="task-3-logging-and-exception-privacy">Task 3: logging and exception privacy</h2>
+<p>Jukto adapters emit only fixed provider/operation/event metadata and HTTP status
+where available. They do not log request or response payloads, URLs, headers,
+recipient data, SMS/OTP content, token responses, usernames, or underlying exception
+text. No diagnostic payload-logging option is retained. <code>enable_debug_logging()</code>
+changes the Jukto logger's level/handler, not this metadata-only policy.</p>
+<p><code>mask_sensitive()</code> now replaces complete known credential values with <code>***</code>,
+regardless of value type, including nested dictionaries/lists. It returns a copy
+and does not reveal credential prefixes/suffixes. This helper is not a universal
+personal-data sanitizer: unknown fields and scalar strings are unchanged, and
+adapters no longer use it to justify logging arbitrary payloads.</p>
+<p>SDK-generated provider exception messages, <code>str</code>, and <code>repr</code> withhold provider
+messages and underlying network-error text because these can echo credentials,
+URLs, OTPs, or recipient data. Raw upstream chains are suppressed in normal
+formatted tracebacks. Exception types, provider identifiers, and codes remain
+available; HTTP/application classification and retry behavior are unchanged.</p>
+<p><code>error.response_body</code> intentionally retains the original parsed body or raw text
+for deliberate investigation. Treat it as sensitive: do not print it, serialize
+it into public API responses, attach it to issue reports, or log it without your
+own reviewed sanitization. Explicit inspection of exception context/request objects
+can likewise reveal sensitive data. Application-created JuktoError messages are
+not automatically scrubbed; callers must not put secrets in those messages.</p>
+<p>This policy covers SDK-generated diagnostics on the <code>jukto</code> logger. It does not
+sanitize independently enabled HTTPX/httpcore logs, application logs, debugger
+locals, or external error-reporting tools. Configure those separately. Existing
+malformed-response failures outside JuktoError remain task 4; this is not a claim
+that arbitrary upstream exceptions have all been normalized.</p>
+<p>Compatibility: provider message text no longer appears in <code>.message</code>, <code>str(error)</code>,
+<code>repr(error)</code>, or ordinary chained traceback output. Consumers needing that text
+must deliberately inspect <code>response_body</code>; do not parse exception message strings
+for error classification. Masking now yields <code>***</code> instead of credential fragments.</p>
+<h2 id="task-4-malformed-responses-and-sms-batch-outcomes">Task 4: malformed responses and SMS batch outcomes</h2>
+<p><code>UnexpectedProviderResponseError</code> extends ProviderError/JuktoError and identifies
+JSON decoding or response-schema failures. Messages and normal tracebacks remain
+metadata-only; response_body preserves sensitive raw text or parsed evidence.
+It does not establish whether an order or SMS side effect occurred. Reconcile
+before retrying. HTTP failures retain HTTP-based classification even if the error
+body is a JSON scalar or array. Only JSONDecodeError/UnicodeDecodeError are caught
+by the common decoder; internal TypeError and other programming failures propagate.</p>
+<p>AlphaSMS requires its documented submission <code>data.request_id</code> on success. Its
+known application errors retain task 1 mappings. Oversized or noncanonical code
+strings and missing success evidence fail closed. BulkSMSBD still accepts the
+unverified legacy integer 202 only; no additional success schema was invented.</p>
+<p>Steadfast/RedX now guard their existing SDK-consumed success fields: Steadfast status
+200 with consignment evidence or delivery_status, RedX tracking_id or tracking.status.
+Pathao guards its existing data envelopes with consignment_id for create, order_status
+for tracking, or object/list store data. These are conservative <strong>SDK compatibility
+policies</strong>, not authoritative upstream schema certification. Unknown/missing envelopes
+and Pathao error/type indicators raise UnexpectedProviderResponseError. The official
+Pathao developer panel still exposes only a JavaScript shell; specific HTTP-200
+application-error mappings remain unresolved and the corresponding checklist item
+is open. No provider error code meanings were inferred from HTTP conventions.</p>
+<p>Pathao token issue/refresh also reject invalid JSON/object/access-token/expiry
+structures. Malformed refresh responses no longer trigger password-auth fallback;
+malformed replay responses and internal programming failures are no longer swallowed
+as the original 401. The broader refresh/replay policy, state atomicity, locking,
+and clock redesign remain task 5. Existing missing-token responses now raise an
+unexpected-response error rather than authentication failure or fallback success.</p>
+<h3 id="greenweb-evidence-and-compatibility">GreenWeb evidence and compatibility</h3>
+<p>The official portal links to bdbulksms.com as its homepage. Its English manual
+at https://bdbulksms.com/bulk-sms-api-bd-english.php documents the existing GreenWeb
+endpoint, HTTPS, json=1, SENT/FAILED JSON entries, and Ok:/Error: text lines.
+Provenance is recorded in tests/fixtures/greenweb_contract.json. Regression entries
+are synthetic; no SMS transactions or demo-token submissions were performed.
+Do not copy that manual's disabled TLS verification examples; Jukto's TLS policy
+remains enabled.</p>
+<p>JSON is parsed before checking status. Echoed message or statusmsg content is not
+searched for error words. Lists are inspected in full, including malformed entries;
+unrecognized status values are unknown, never assumed successful. The documented
+json=1 option is now sent. Legacy single-object SENT/FAILED/error envelopes remain
+compatible. Historical standalone text errors are restricted to anchored prefixes
+and explicitly remain unverified; arbitrary plain text is rejected. Documented
+Ok:/Error: lines are evaluated individually, preserving mixed text outcomes.</p>
+<p><code>SMSBatchResult</code> subclasses list, preserving ordered raw entries. Its sent_indices,
+failed_indices, and unknown_indices refer to response positions, <strong>not guaranteed
+positions in the original recipient request</strong>. For JSON, correlate using the original
+<code>to</code> field when present, not guessed ordering. SENT is provider output, not independent
+delivery confirmation. Raw entries and returned successful text may contain personal
+data and must not be logged.</p>
+<p>Successful JSON lists return SMSBatchResult (normal list operations still work).
+Batches with failed or unknown entries raise SMSBatchError, a ProviderError subclass,
+with <code>.results</code> and <code>.response_body</code>. Entirely unrecognized batches raise
+UnexpectedProviderResponseError while retaining the raw body. No automatic retry
+or failover is performed. Preserve successful entries and reconcile unknown outcomes;
+do not resend the whole batch. Single successful text responses retain the legacy
+string return shape; multi-line text responses use the batch representation.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">jukto</span><span class="w"> </span><span class="kn">import</span> <span class="n">SMSBatchError</span><span class="p">,</span> <span class="n">UnexpectedProviderResponseError</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">send_sms</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">except</span> <span class="n">SMSBatchError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">sent_positions</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">sent_indices</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">failed_positions</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">failed_indices</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">unknown_positions</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">unknown_indices</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="c1"># Persist outcomes privately; reconcile before any targeted retry.</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">except</span> <span class="n">UnexpectedProviderResponseError</span><span class="p">:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="c1"># Submission outcome is unknown. Do not automatically resend.</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="k">pass</span>
+</span></code></pre></div>
+<h2 id="pathao-token-lifecycle-and-replay-task-5-2026-10-10">Pathao token lifecycle and replay (task 5, 2026-10-10)</h2>
+<p>Token exchange and publication are serialized by a per-client reentrant lock.
+Waiters recheck expiry under that lock; concurrent late 401 responses reuse a newer
+cache generation rather than invalidating it. The cache and lock belong to one
+client instance in one process: workers, other instances, and forked processes do
+not coordinate. Construct clients inside each worker. Do not mutate token cache
+attributes from application threads or persist <code>token_expiry</code>.</p>
+<p><code>token_expiry</code> is now a <strong>monotonic deadline</strong>, not a Unix timestamp. Lifetime starts
+before the exchange request, subtracting network latency conservatively. The refresh
+margin is min(60 seconds, 10% of lifetime), allowing short-lived tokens to be reused.
+A nonblank access token and finite positive <code>expires_in</code> are required; no undocumented
+3600-second default is supplied. A supplied refresh token must be a nonblank string;
+omission preserves the previous refresh token during refresh and clears it during
+password issuance. All fields are validated before publishing the new cache state.
+Malformed responses and transport failures leave the prior state untouched.</p>
+<p>Only HTTP 400 with JSON <code>error: "invalid_grant"</code> during a refresh grant triggers one
+password-grant fallback. This classification follows <a href="https://www.rfc-editor.org/rfc/rfc6749#section-5.2">RFC 6749 sections 5.2 and 6</a>,
+which defines rejection of an invalid/expired/revoked refresh token, and permits
+omission or rotation of the refresh token on successful refresh. Pathao's exact
+adoption of this error envelope, expiry schema, and omission behavior remains
+<strong>unverified</strong>: its <a href="https://developer.pathao.com/">developer portal</a> could not be
+retrieved in this audit. These are conservative SDK policies grounded in OAuth,
+not Pathao certification. Generic 400/401/403, 429/500, timeout, network, and malformed
+refresh responses propagate; they never silently switch to password authentication.</p>
+<p>GET operations replay at most once after HTTP 401, refreshing or issuing a token.
+The final attempt's HTTP/timeout/network/schema error is propagated with its own
+response data. No retries occur for timeouts, network failures, 5xx, or validation
+errors. Shipment creation no longer automatically replays: callers receive the 401.
+For integrations with independently verified guarantees that a 401 shipment request
+has no side effects, <code>PathaoClient(..., retry_unauthorized_orders=True)</code> restores the
+legacy single replay. This option is an explicit application assumption; Pathao's
+no-side-effect-on-401 and shipment idempotency guarantees remain unresolved. An
+order reference is not evidence of idempotency. Reconcile uncertain outcomes before
+application retries. No live shipment or credentialed authentication was performed.</p>
+<p>Offline lifecycle regressions cover final retry failures, transient refresh outages,
+malformed token state, rotation, short lifetimes, clock jumps, concurrent expiry,
+concurrent stale 401, and default refusal to replay shipment creation.</p>
+<h2 id="shipment-input-validation-and-migration-task-6-2026-10-10">Shipment input validation and migration (task 6, 2026-10-10)</h2>
+<p>All three adapters validate the Parcel again at submission, including mutations
+made after construction, before any HTTP client or Pathao token exchange. Nonblank
+string invoice/name/phone/address, positive integer quantity, finite positive numeric
+weight, finite nonnegative numeric COD, and configured nonblank credentials are SDK
+input policies. Booleans, numeric strings, NaN/infinity, unrepresentable numeric
+magnitudes, and nonstring notes are rejected with JuktoValidationError. Error text
+names fields without echoing their values. This does not verify deliverability,
+phone syntax, geographic membership, vendor limits, or monetary precision.</p>
+<h3 id="pathao-evidence">Pathao evidence</h3>
+<p>The provider-maintained <a href="https://github.com/pathao-eng/courier-woocommerce-plugin/blob/main/pathao-bridge.php">pathao-bridge.php makeDto serializer</a>
+conditionally includes city/zone/area only when supplied, rather than filling them
+with 1. Jukto now follows that behavior: None omits the field; explicit values must
+be positive integers. No cross-provider geography translation occurs. Parcel.store_id
+uses the client default only for None; explicit zero no longer silently overrides
+it. Store ID must be positive. Delivery/item type must be positive integers;
+accepted enum values, weight units/range, address-dependent omission acceptance,
+phone constraints, and complete provider requirements remain unresolved. A maintained
+integration is narrower evidence than a normative API specification. No new vendor
+limits or enums are guessed. Existing item_weight numeric serialization is retained.</p>
+<h3 id="redx-evidence-and-corrections">RedX evidence and corrections</h3>
+<p>The official <a href="https://redx.com.bd/developer-api/">developer page</a> exposes its published
+specification in <a href="https://redx.com.bd/_next/static/chunks/pages/developer-api-fb24bbe4344e870c.js">this versioned JavaScript bundle</a>.
+Its Create Parcel specification confirms <code>/parcel</code>, <code>API-ACCESS-TOKEN: Bearer ...</code>,
+a delivery-area name and integer ID, independent cash collection and declared
+value for compensation, and optional pickup_store_id. Consequently create_order
+now uses that endpoint/header and requires explicit <code>declared_value</code>,
+<code>redx_delivery_area</code>, and <code>redx_delivery_area_id</code>. It sends optional
+<code>redx_pickup_store_id</code> only when supplied. It does not use Pathao's city/zone/area
+or store_id. Example prepaid inputs:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">parcel</span> <span class="o">=</span> <span class="n">Parcel</span><span class="p">(</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">invoice_id</span><span class="o">=</span><span class="s2">"INV-1"</span><span class="p">,</span> <span class="n">recipient_name</span><span class="o">=</span><span class="s2">"Example Customer"</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">recipient_phone</span><span class="o">=</span><span class="s2">"01700000000"</span><span class="p">,</span> <span class="n">recipient_address</span><span class="o">=</span><span class="s2">"Example street address"</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">cod_amount</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">declared_value</span><span class="o">=</span><span class="mi">1200</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">redx_delivery_area</span><span class="o">=</span><span class="s2">"Banani"</span><span class="p">,</span> <span class="n">redx_delivery_area_id</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">item_weight</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Area names/IDs above are illustrative; obtain matching values from RedX's own
+<code>/areas</code> specification/service. Jukto validates shape, not existence or the pairing.
+Declared value is never inferred from COD: existing RedX callers must now provide
+it, including when COD is zero. These new optional Parcel fields are appended,
+preserving existing positional arguments. Pathao/Steadfast do not serialize declared
+value because a supported field has not been verified for those adapters.</p>
+<p><strong>Remaining RedX ambiguity:</strong> the create table labels weight and value as strings,
+while its curl example uses numeric weight/value; the parcel-detail specification
+describes returned weight in grams, but the create table ambiguously mentions kg/g.
+The officially linked <a href="https://wordpress.org/plugins/redx-for-woocommerce/">WooCommerce plugin</a>
+(version downloaded from WordPress) uses integer weights and numeric amount/value
+on its distinct <code>/wordpress/parcel</code> endpoint, so it is corroborating evidence, not
+proof of identical types on <code>/parcel</code>. Jukto retains the legacy SDK convention:
+item_weight in kilograms converted to integer grams, numeric cash/value. It now
+rejects fractional grams instead of truncating them or inventing a 500g fallback.
+Create weight units/range/rounding and exact accepted JSON number/string types still
+require provider confirmation. Offline tests assert this <strong>SDK policy</strong>, not live
+compatibility. RedX tracking endpoint/response changes are outside task 6; the legacy
+<code>/parcels/tracking/{id}</code> route and guards remain unverified. The shared RedX auth
+header is now the documented API-ACCESS-TOKEN for both operations.</p>
+<h3 id="evidence-record-and-limits">Evidence record and limits</h3>
+<p><code>tests/fixtures/shipment_contracts.json</code> records source provenance and unresolved
+contracts. Retrieved public-source SHA-256 digests:</p>
+<ul>
+<li>RedX bundle: <code>323ce7e69b14334da721aaab12b94c889b4099d393897ef64e560eae8381f70d</code></li>
+<li>Pathao bridge: <code>0e8c93123adaea0b0d8fb8f1613972842038a732f0d594a49e2fd472fc940a4f</code></li>
+</ul>
+<p>Steadfast's specification remained inaccessible; its existing payload is unchanged,
+and local validation is explicitly SDK policy. Exact provider phone formats, lengths,
+amount precision/currency, and maximum quantity/weight remain unresolved across
+these providers. No regex, region defaults, minimum monetary value, or undocumented
+vendor limits were added. All checks were offline; no shipments were created.</p>
+<h2 id="http-client-ownership-and-lifecycle-task-7-2026-10-10">HTTP client ownership and lifecycle (task 7, 2026-10-10)</h2>
+<p>All six synchronous providers now share one transport implementation. It validates
+actual target URLs, creates an owned httpx.Client lazily on the first valid operation,
+and reuses it until close(). Provider-specific response inspection and exceptions
+remain in the adapters. Pathao token exchange and resource replay use the same pool.
+First-use initialization is synchronized; parallel requests are not serialized by
+the initialization lock. Connection reuse follows <a href="https://www.python-httpx.org/advanced/clients/">HTTPX's client model</a>;
+offline tests prove client reuse, not a measured network performance improvement.</p>
+<p>Use a context manager or call close() when the application finishes with a provider:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">jukto</span><span class="w"> </span><span class="kn">import</span> <span class="n">AlphaSMSClient</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">with</span> <span class="n">AlphaSMSClient</span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">api_key</span><span class="o">=</span><span class="s2">"example-key"</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">timeout</span><span class="o">=</span><span class="n">httpx</span><span class="o">.</span><span class="n">Timeout</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">connect</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">read</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">write</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">limits</span><span class="o">=</span><span class="n">httpx</span><span class="o">.</span><span class="n">Limits</span><span class="p">(</span><span class="n">max_connections</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">max_keepalive_connections</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>                        <span class="n">keepalive_expiry</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span> <span class="k">as</span> <span class="n">sms</span><span class="p">:</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="c1"># Existing send_sms calls use this provider's single pool.</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="k">pass</span>
+</span></code></pre></div>
+<p>The constructor's existing scalar timeout remains supported; httpx.Timeout exposes
+connect/read/write/pool settings. limits accepts <a href="https://www.python-httpx.org/advanced/resource-limits/">httpx.Limits</a>
+for owned pools, with HTTPX defaults when omitted. These settings are captured at
+construction. Configure a new provider rather than mutating its timeout attribute.
+Owned clients retain certificate verification and refuse redirects. There are no
+SDK transport retries; Pathao's operation-specific, bounded 401 replay is unchanged.</p>
+<p>For injection, pass keyword-only http_client to any provider:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span> <span class="k">as</span> <span class="n">application_client</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">with</span> <span class="n">AlphaSMSClient</span><span class="p">(</span><span class="s2">"example-key"</span><span class="p">,</span> <span class="n">http_client</span><span class="o">=</span><span class="n">application_client</span><span class="p">)</span> <span class="k">as</span> <span class="n">sms</span><span class="p">:</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        <span class="k">pass</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="c1"># application_client is still open here; its owner closes it.</span>
+</span></code></pre></div>
+<p>Injected clients are <strong>borrowed</strong>. Provider close/context exit marks the provider
+closed without closing that HTTPX client. Borrowed pool configuration belongs to
+its owner: combining http_client with provider limits raises JuktoConfigurationError.
+The SDK timeout (including the default 30 seconds) overrides the borrowed request
+timeout. Redirects are explicitly disabled per request and client-level HTTPX auth
+is disabled so it cannot replace provider authentication. A separately closed
+borrowed client is rejected on use. Invalid injection types are configuration errors.</p>
+<p>The application controls an injected client's TLS verification, proxies, custom
+transport retries, event hooks, default headers/params, and cookies; Jukto cannot
+certify those settings. Use a dedicated provider client configured for verified TLS
+and no automatic retries of side-effecting requests. HTTPX merges client defaults
+into requests and retains cookies, including in owned pools. Do not share a borrowed
+client carrying unrelated credentials or tenant state across providers. Hooks and
+custom logging also remain application-controlled.</p>
+<p>close() is idempotent. Closing an unused owned provider does not create a pool.
+Closed providers cannot be reused or re-entered; construct a new instance. Context
+exit also closes owned resources when application code raises. Finish all in-flight
+operations before close(); concurrent shutdown/request use is unsupported. Create
+clients inside each worker process; do not fork or persist a live pool. These APIs
+are synchronous and block the calling thread; native async remains task 11.</p>
+<p>Migration: previously every operation closed its temporary pool automatically.
+Long-lived application integrations now need explicit provider shutdown or context
+management. Existing operation signatures and provider response shapes are unchanged.
+No live requests were used to test transport ownership or pooling.</p>
+<h2 id="typed-domain-contracts-and-migration-task-8-2026-10-10">Typed domain contracts and migration (task 8, 2026-10-10)</h2>
+<p>The raw APIs remain compatible: create_order/check_status/send_sms keep their
+existing dictionaries, strings and lists. New create_shipment/check_shipment_status
+and submit_sms methods return ShipmentCreationResult, ShipmentStatusResult and
+SMSSubmissionResult. Common fields are provider, provider ID/request ID, Outcome,
+original provider status, and raw. Outcome has ACCEPTED, DELIVERED, FAILED, PARTIAL
+and UNKNOWN. Results are frozen containers, but raw data is neither copied nor
+sanitized; it can contain personal information. Raw/status/recipient fields and
+submission request IDs are excluded from result repr. Use raw only in deliberate,
+access-controlled diagnostics. Provider IDs normalize string/integer IDs to strings.
+Unknown or invalid identifiers do not establish acceptance.</p>
+<p><a href="https://github.com/jukto-sdk/jukto-python/blob/main/examples/normalized_shipments.py">examples/normalized_shipments.py</a>
+is one typed consumer for all three shipment providers, with no provider-specific
+response indexing. ACCEPTED means submission/creation evidence, not delivery,
+fulfillment or payment. Pathao's maintained creation consumer and RedX's published
+tracking_id response support this inference; Steadfast creation remains UNKNOWN
+because its success contract has not been verified. All polling vocabularies remain
+UNKNOWN, including familiar strings such as Delivered: no cross-endpoint status
+mapping is assumed. Original status and IDs remain accessible for application
+policies and reconciliation. RedX's new typed status method uses its documented
+<code>/parcel/info/{id}</code> and <code>parcel.status</code>; legacy check_status keeps its prior route.
+RedX's published webhook mapped-status meanings are not assumed to certify polling
+states. This intentionally does not offer verified delivered/returned/failed
+shipment classifications yet.</p>
+<p>AlphaSMS's <a href="https://sms.bd/api">published submission envelope</a> supports ACCEPTED
+and a submission request_id, with no per-recipient delivery claims. GreenWeb's
+<a href="https://bdbulksms.com/bulk-sms-api-bd-english.php">published recipient output</a> supports
+SENT → ACCEPTED and FAILED → FAILED. Unrecognized entries remain UNKNOWN and mixed
+outcomes become PARTIAL. SMSBatchError preserves the original list-compatible
+results and adds normalized_result; SMSBatchResult.normalized exposes the same
+models. Recipient identities are only response-supplied <code>to</code> values; response_index
+is not an input-position correlation or resend instruction. Text-only responses
+cannot supply an independently verified recipient identity. BulkSMSBD's legacy
+202 remains UNKNOWN in the typed API. Full provenance is recorded in
+<code>tests/fixtures/result_contracts.json</code>; no live delivery was verified.</p>
+<h3 id="error-metadata-and-ambiguity">Error metadata and ambiguity</h3>
+<p>JuktoError adds http_status, provider_error_code, request_id, retry_after, outcome
+and reconciliation_required. Legacy status_code remains unchanged for compatibility,
+including its historical mixture of application and HTTP codes. New code should
+use the separate fields. HTTP status comes from the final observed response;
+application codes come only from existing adapter envelopes, retaining original
+numeric/string representation. HTTP errors without such a field have no provider
+code. Request ID uses the response's X-Request-ID when supplied, and Retry-After is
+retained as the original header string, not parsed into an automatic delay. Neither
+header's presence or vendor support is guaranteed; unknown provider code semantics
+remain unknown. Header values and response bodies are excluded from exception
+str/repr. Request-local context isolates metadata between threads and clears it
+before each attempt so a final timeout cannot inherit an earlier 401's headers.</p>
+<p>When a shipment/SMS POST was attempted, a timeout, connection failure, 5xx or malformed
+response conservatively sets UNKNOWN and reconciliation_required. This flag means
+reconcile with the provider, not blindly resend or switch providers. Authentication
+exchange alone and read-only calls do not count as shipment/SMS attempts. Published
+AlphaSMS rejection codes in HTTP 200 responses establish FAILED, except server code 409 and unknown codes.
+GreenWeb batch errors expose all outcomes; unknown entries require reconciliation.
+Other vendor rejection/idempotency guarantees remain unverified and therefore do
+not clear uncertainty. A local validation/configuration error before sending does
+not require reconciliation. No automatic retry, backoff, failover or deduplication
+was added. Applications must persist operation references and provider evidence,
+query their provider/dashboard after ambiguous outcomes, and apply their own durable
+deduplication/reconciliation policies. References are not provider idempotency keys.</p>
+<h3 id="options-capabilities-and-monetary-values">Options, capabilities and monetary values</h3>
+<p>Parcel accepts optional PathaoOptions and RedXOptions. Typed options take precedence
+over legacy flat fields for their own provider only. PathaoOptions scopes store,
+city/zone/area and delivery/item type; RedXOptions scopes area name/ID and pickup
+store. Legacy fields still work when the corresponding options object is absent.
+capabilities describes the SDK's implemented operations/options, not production
+certification, cross-provider interchangeability or delivery-status verification.
+Only RedX exposes verified declared-value fields in the current adapter; only
+GreenWeb exposes per-recipient submission output. No geography translation occurs.</p>
+<p>Monetary input annotations accept Decimal, plus int/float for backward compatibility.
+Use Decimal constructed from a decimal string for new integrations. Validation
+compares finite, nonnegative Decimal values without converting through binary float.
+For RedX, Decimal amounts are serialized as exact fixed-point strings per the
+published create table. Existing int/float JSON number serialization is retained
+as explicit legacy compatibility. The RedX table and curl examples disagree on
+accepted number/string types; actual acceptance and monetary precision still need
+vendor confirmation. Pathao/Steadfast Decimal integers serialize as exact JSON
+integers; fractional Decimals fail locally until a lossless supported wire format
+is verified. Legacy floats retain their previous serialization and binary-float
+limitations. No currency, rounding, decimal scale or minor-unit conversion is guessed.
+Nonzero declared goods value can remain independent of zero COD.</p>
+<p>The package includes py.typed and a mypy development dependency/configuration. Run
+<code>python -m mypy</code> to check the SDK and normalized consumer example. The SMS interface
+now truthfully permits raw dictionary/list/string results; HTTP status handlers
+are annotated NoReturn. These checks do not certify every raw provider dictionary:
+the raw escape hatch deliberately uses Any. Multi-version CI, wheel installation
+checks and publication gates remain the next CI/release task (currently task 10 in
+the local checklist).</p>
+<h2 id="sdk-capabilities-and-verification-summary">SDK capabilities and verification summary</h2>
+<p>This summary describes implemented methods, not independently certified provider
+behavior. Detailed evidence and dates are in the table above and task audit notes.
+All clients are synchronous; payments, delivery receipt processors and generic
+side-effect retries are not implemented.</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>SDK operations/options</th>
+<th>Normalized semantics and unresolved contracts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Steadfast</td>
+<td>Shipment creation/status</td>
+<td>Creation and polling UNKNOWN; endpoint/schema and status vocabulary unverified</td>
+</tr>
+<tr>
+<td>Pathao</td>
+<td>Shipment creation/status, store/geography options, process-local OAuth lifecycle</td>
+<td>Creation with ID ACCEPTED; polling UNKNOWN; provider-maintained DTO evidence supports omission of absent geography, but full error/status/replay guarantees remain unverified</td>
+</tr>
+<tr>
+<td>RedX</td>
+<td>Shipment creation/status, area options, declared value</td>
+<td>Documented create fields/auth and typed parcel-info path; creation with ID ACCEPTED, polling UNKNOWN; exact weight units/types, Decimal wire acceptance and legacy raw tracking unresolved</td>
+</tr>
+<tr>
+<td>AlphaSMS</td>
+<td>SMS submission</td>
+<td>Published code 0 plus request ID ACCEPTED; audited failure codes; no delivery confirmation API</td>
+</tr>
+<tr>
+<td>GreenWeb</td>
+<td>SMS submission and per-response-entry outcomes</td>
+<td>SENT is ACCEPTED submission; FAILED/unknown preserved; partial batches raise SMSBatchError; request/response ordering and legacy standalone text-error mappings unresolved</td>
+</tr>
+<tr>
+<td>BulkSMSBD</td>
+<td>Legacy SMS submission</td>
+<td>Legacy code 202 UNKNOWN; application-code meanings and HTTPS POST support unresolved; default HTTP refused</td>
+</tr>
+</tbody>
+</table>
+<p><code>provider.capabilities</code> exposes SDK method availability, including shipment/SMS,
+per-recipient submission, geography options and declared value. It does not certify
+provider constraints, routing validity, delivery status or idempotency. See the
+<a href="../guides/logistics/">logistics guide</a> and <a href="../guides/sms/">SMS guide</a> before adopting
+these capabilities in an application.</p>
+<h2 id="native-async-additions-task-12-010a1-alpha">Native async additions (task 12, 0.1.0a1 alpha)</h2>
+<p>The six <code>Async*Client</code> classes share the same pure payload builders, response
+parsers, classifications and normalized result helpers as sync clients. All
+verification gaps above apply equally to async operations. No new provider
+endpoint, success vocabulary or idempotency guarantee was inferred for this task.
+See <a href="../guides/async/">native async</a> for asyncio scope, cancellation and lifecycle.</p>
+<h2 id="first-payment-adapter-task-13-experimental-alpha">First payment adapter (task 13, experimental alpha)</h2>
+<p>SSLCOMMERZ hosted BDT checkout is the only payment integration. Sync/async clients
+share audited parsers and validation. See the <a href="../payment-contracts/">separate payment contract matrix</a>
+for official v4/signature provenance, requirements and unresolved sandbox/refund
+contracts. No live compatibility or provider idempotency is certified. Standalone
+bKash/Nagad remain planned.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2026 Mehedi Hasan Faysal
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/jukto-sdk/jukto-python" target="_blank" rel="noopener" title="Jukto source code on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://pypi.org/project/jukto/" target="_blank" rel="noopener" title="Install Jukto from PyPI" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://mahdiblogs.com" target="_blank" rel="noopener" title="Mehedi H Faysal" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
