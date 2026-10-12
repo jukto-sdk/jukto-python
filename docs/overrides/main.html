@@ -4,6 +4,7 @@
   {% if page and page.canonical_url %}
     {% set title = page.meta.get("title", page.title) ~ " | " ~ config.site_name %}
     {% set description = page.meta.get("description", config.site_description) %}
+    <meta name="google-site-verification" content="DwZEnxFuAMPZusoGp6m_39E24pnIzSM25_u296u3Vn8" />
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ config.site_name | e }}">
     <meta property="og:title" content="{{ title | e }}">
